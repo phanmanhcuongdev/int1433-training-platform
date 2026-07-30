@@ -50,7 +50,10 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      - run: docker build -t int1433-java-runner:0.4.2 runner
+      - name: Read project version
+        id: version
+        run: echo "value=$(cat VERSION)" >> "$GITHUB_OUTPUT"
+      - run: docker build -t int1433-java-runner:${{ steps.version.outputs.value }} runner
       - run: ./backend/mvnw test
       - name: Verify backend test count
         run: |
@@ -87,7 +90,8 @@ jobs:
           sed -i 's/DOCKER_GID=replace-with-docker-socket-gid/DOCKER_GID=999/' deploy/.env.prod
           sed -i 's/CHALLENGE_PUBLIC_HOST=replace-with-server-ip-or-domain/CHALLENGE_PUBLIC_HOST=int1433.example.com/' deploy/.env.prod
           sed -i 's/RMI_PUBLIC_HOST=replace-with-server-ip-or-domain/RMI_PUBLIC_HOST=int1433.example.com/' deploy/.env.prod
-          sed -i 's|JAVA_RUNNER_IMAGE=ghcr.io/phanmanhcuongdev/int1433-java-runner:0.4.2|JAVA_RUNNER_IMAGE=ghcr.io/example-owner/int1433-java-runner:0.4.2|' deploy/.env.prod
+          APP_VERSION="$(grep '^APP_VERSION=' deploy/.env.prod | cut -d= -f2-)"
+          sed -i "s|JAVA_RUNNER_IMAGE=ghcr.io/phanmanhcuongdev/int1433-java-runner:.*|JAVA_RUNNER_IMAGE=ghcr.io/example-owner/int1433-java-runner:${APP_VERSION}|" deploy/.env.prod
           docker compose --env-file deploy/.env.prod -f deploy/docker-compose.prod.yml config > /tmp/int1433-compose.yml
       - name: Verify production port boundaries
         run: |

@@ -10,7 +10,7 @@ Build a Java-first practice platform for INT1433 with automatic grading for sele
 
 ## Current Status
 
-- Version: `0.5.0`
+- Version: `0.5.1`
 - State: ten automatically evaluated exercises
 - Frontend: Vue 3/Vite with Vue Router and REST API calls
 - Backend: Spring Boot REST API under `/api/v1`
@@ -31,7 +31,7 @@ Build a Java-first practice platform for INT1433 with automatic grading for sele
 - Vue 3 + Vite + Vue Router + JavaScript.
 - Java 21 + Spring Boot 3.x.
 - PostgreSQL + Flyway.
-- Docker-isolated Java runner image `int1433-java-runner:0.5.0`.
+- Docker-isolated Java runner image `int1433-java-runner:0.5.1`.
 - Production images are published through GitHub Actions to GHCR.
 - Spring Web Services publishes the SOAP/WSDL challenge endpoint.
 - JSON content files under `content/exercises` remain authoring/import sources.
@@ -111,7 +111,7 @@ Images:
 - `ghcr.io/<owner>/int1433-web`
 - `ghcr.io/<owner>/int1433-java-runner`
 
-Release tag `v0.5.0` publishes `0.5.0`, `0.5`, `sha-<short-sha>` and `latest`. Pushes to `main` publish `main` and `sha-<short-sha>`. Pull requests build images but do not push.
+Release tag `v0.5.1` publishes `0.5.1`, `0.5`, `sha-<short-sha>` and `latest`. Pushes to `main` publish `main` and `sha-<short-sha>`. Pull requests build images but do not push.
 
 Server flow:
 
@@ -149,7 +149,7 @@ Generated content is no longer the frontend runtime data source.
 2. Phase 1A: static site renders pilot content and grows to reviewed exercises. Started in `0.2.0`.
 3. Phase 2: automatic grading product slice for 10 exercises. Completed in `0.4.0`.
 4. Phase 3: production image delivery and pull-only deployment bundle. Completed in `0.4.2`.
-5. Phase 4: Java submission UX and source resubmission workflow. Completed in `0.5.0`.
+5. Phase 4: Java submission UX and source resubmission workflow. Completed in `0.5.1`.
 6. Phase 5: harden operations, security review, and expand content only after the v0.5 flows are reviewed.
 
 ## Research

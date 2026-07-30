@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 
+## [0.5.1] - 2026-07-30
+
+### Fixed
+
+- GitHub Actions image publishing now builds the Java runner with the current project version instead of a stale release tag.
+
+### Changed
+
+- Production deployment defaults now target the Java file-submission UX release.
+
 ## [0.5.0] - 2026-07-30
 
 ### Added
