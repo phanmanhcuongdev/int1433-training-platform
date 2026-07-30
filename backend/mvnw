@@ -1,11 +1,13 @@
 #!/usr/bin/env sh
 set -eu
 
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+cd "$SCRIPT_DIR"
+
 if command -v mvn >/dev/null 2>&1; then
   exec mvn "$@"
 fi
 
-SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 MAVEN_VERSION=3.9.9
 WRAPPER_DIR="$SCRIPT_DIR/.mvn/wrapper/dists"
 MAVEN_HOME="$WRAPPER_DIR/apache-maven-$MAVEN_VERSION"
@@ -20,5 +22,4 @@ if [ ! -x "$MAVEN_HOME/bin/mvn" ]; then
   tar -xzf "$ARCHIVE" -C "$WRAPPER_DIR"
 fi
 
-cd "$SCRIPT_DIR"
 exec "$MAVEN_HOME/bin/mvn" "$@"

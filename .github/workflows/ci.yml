@@ -80,9 +80,13 @@ jobs:
             cat /tmp/int1433-compose.yml
             exit 1
           fi
-          grep -q '19000-19020' /tmp/int1433-compose.yml
-          grep -q '19100-19120' /tmp/int1433-compose.yml
-          grep -q '19200' /tmp/int1433-compose.yml
+          grep -q 'published: "19000"' /tmp/int1433-compose.yml
+          grep -q 'published: "19020"' /tmp/int1433-compose.yml
+          grep -q 'protocol: tcp' /tmp/int1433-compose.yml
+          grep -q 'published: "19100"' /tmp/int1433-compose.yml
+          grep -q 'published: "19120"' /tmp/int1433-compose.yml
+          grep -q 'protocol: udp' /tmp/int1433-compose.yml
+          grep -q 'published: "19200"' /tmp/int1433-compose.yml
 
   image-build-smoke:
     runs-on: ubuntu-latest

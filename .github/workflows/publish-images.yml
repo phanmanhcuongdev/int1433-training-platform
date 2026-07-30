@@ -47,9 +47,18 @@ jobs:
           sed -i 's/DOCKER_GID=replace-with-docker-socket-gid/DOCKER_GID=999/' deploy/.env.prod
           sed -i 's|JAVA_RUNNER_IMAGE=ghcr.io/replace-owner/int1433-java-runner:0.4.1|JAVA_RUNNER_IMAGE=ghcr.io/example-owner/int1433-java-runner:0.4.1|' deploy/.env.prod
           docker compose --env-file deploy/.env.prod -f deploy/docker-compose.prod.yml config >/tmp/int1433-compose.yml
-          grep -q '19000-19020' /tmp/int1433-compose.yml
-          grep -q '19100-19120' /tmp/int1433-compose.yml
-          grep -q '19200' /tmp/int1433-compose.yml
+          if grep -Eq '0\.0\.0\.0:(5432|8080)->|:(5432|8080):' /tmp/int1433-compose.yml; then
+            echo "PostgreSQL or backend port is public."
+            cat /tmp/int1433-compose.yml
+            exit 1
+          fi
+          grep -q 'published: "19000"' /tmp/int1433-compose.yml
+          grep -q 'published: "19020"' /tmp/int1433-compose.yml
+          grep -q 'protocol: tcp' /tmp/int1433-compose.yml
+          grep -q 'published: "19100"' /tmp/int1433-compose.yml
+          grep -q 'published: "19120"' /tmp/int1433-compose.yml
+          grep -q 'protocol: udp' /tmp/int1433-compose.yml
+          grep -q 'published: "19200"' /tmp/int1433-compose.yml
 
   publish:
     needs: checks
