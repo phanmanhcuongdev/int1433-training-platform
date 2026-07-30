@@ -1,0 +1,52 @@
+{
+  "id": "tcp-character-001",
+  "title": "TCP Character Stream Word Normalization",
+  "status": "DRAFT",
+  "track": "EXAM",
+  "technology": "TCP",
+  "protocol": "TCP",
+  "transport": "Socket",
+  "stream_type": "Character Stream",
+  "difficulty": "EASY",
+  "level": "L2",
+  "source_label": "OBSERVED",
+  "source_claim_ids": [
+    "CLAIM-TCP-001",
+    "CLAIM-FAILURE-002"
+  ],
+  "source_files": [
+    "docs/research/exam/04_EXAM_PATTERNS.md",
+    "docs/research/exam/05_COMMON_FAILURES.md"
+  ],
+  "statement": "Build a Java TCP client for a mock server at <HOST>:<PORT>. The client sends the student code and question code, receives one text line, normalizes words, and submits one text line back to the mock server.",
+  "server_contract": {
+    "host": "<HOST>",
+    "port": "<PORT>",
+    "request": "studentCode;qCode",
+    "response": "one text line",
+    "submission": "one text line"
+  },
+  "request_format": "{studentCode};{qCode}",
+  "response_format": "{rawText}",
+  "processing_requirement": "Capitalize the first letter of each word and lowercase the remaining letters.",
+  "submission_format": "{normalizedText}",
+  "timeout": {
+    "read_ms": 5000
+  },
+  "common_failures": [
+    "missing_newline",
+    "missing_flush",
+    "wrong_request_format",
+    "console_output_used_as_submission"
+  ],
+  "tags": [
+    "tcp",
+    "character-stream",
+    "mock-contract"
+  ],
+  "estimated_time": "25m",
+  "hints": [
+    "Submit data through the socket. Console output is not the submission."
+  ]
+}
+

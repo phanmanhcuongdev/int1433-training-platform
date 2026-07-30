@@ -1,0 +1,33 @@
+{
+  "id": "fnd-character-flush-001",
+  "title": "Character Stream Flush Drill",
+  "status": "DRAFT",
+  "track": "EXAM",
+  "technology": "Java I/O",
+  "difficulty": "EASY",
+  "level": "L0",
+  "source_label": "EXTENDED",
+  "statement": "Practice a line-based character stream contract locally. This is a prerequisite drill for TCP character stream exercises and does not connect to a real exam server.",
+  "processing_requirement": "Read one input line, transform it to uppercase, write the transformed line, then flush the writer.",
+  "common_failures": [
+    "missing_flush",
+    "missing_newline",
+    "readline_blocking"
+  ],
+  "tags": [
+    "foundation",
+    "character-stream",
+    "flush"
+  ],
+  "estimated_time": "15m",
+  "prerequisites": [
+    "Java Reader/Writer",
+    "BufferedReader",
+    "BufferedWriter"
+  ],
+  "hints": [
+    "A buffered writer may keep data in memory until flush is called."
+  ],
+  "explanation": "This pilot is intentionally content-only. It prepares for observed TCP character stream failures without claiming to be an exam problem."
+}
+

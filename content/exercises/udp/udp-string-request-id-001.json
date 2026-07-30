@@ -1,0 +1,52 @@
+{
+  "id": "udp-string-request-id-001",
+  "title": "UDP String RequestId Echo",
+  "status": "DRAFT",
+  "track": "EXAM",
+  "technology": "UDP",
+  "protocol": "UDP",
+  "transport": "Datagram",
+  "stream_type": "String",
+  "difficulty": "EASY",
+  "level": "L2",
+  "source_label": "OBSERVED",
+  "source_claim_ids": [
+    "CLAIM-UDP-001",
+    "CLAIM-FAILURE-002"
+  ],
+  "source_files": [
+    "docs/research/exam/04_EXAM_PATTERNS.md",
+    "docs/research/exam/05_COMMON_FAILURES.md"
+  ],
+  "statement": "Build a Java UDP client for a mock server at <HOST>:<PORT>. The server returns a requestId and a string payload. Submit the processed answer with the same requestId.",
+  "server_contract": {
+    "host": "<HOST>",
+    "port": "<PORT>",
+    "request": ";studentCode;qCode",
+    "response": "requestId;data",
+    "submission": "requestId;processedData"
+  },
+  "request_format": ";{studentCode};{qCode}",
+  "response_format": "{requestId};{data}",
+  "processing_requirement": "Reverse the payload string while preserving the exact requestId from the server response.",
+  "submission_format": "{requestId};{reversedData}",
+  "timeout": {
+    "read_ms": 5000
+  },
+  "common_failures": [
+    "missing_request_id",
+    "using_full_buffer_instead_of_packet_length",
+    "wrong_udp_request_prefix",
+    "stale_port_assumption"
+  ],
+  "tags": [
+    "udp",
+    "request-id",
+    "string"
+  ],
+  "estimated_time": "25m",
+  "hints": [
+    "Use the datagram packet length when converting bytes to text."
+  ]
+}
+
