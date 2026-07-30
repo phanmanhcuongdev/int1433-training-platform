@@ -2,6 +2,18 @@
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-07-30
+
+### Fixed
+
+- GitHub Actions checks now receive a PostgreSQL service.
+- Production Compose and deployment scripts are aligned with GHCR release images.
+- Server deployment pulls the Java runner image before accepting submissions.
+
+### Added
+
+- End-to-end server deployment verification and production smoke workflow.
+
 ## [0.4.1] - 2026-07-30
 
 ### Added

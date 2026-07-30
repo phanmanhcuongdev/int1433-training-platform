@@ -1,5 +1,5 @@
 FROM eclipse-temurin:21-jdk
-ARG VERSION=0.4.1
+ARG VERSION=0.4.2
 ARG REVISION=unknown
 ARG CREATED=unknown
 ARG SOURCE=unknown

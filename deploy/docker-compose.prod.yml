@@ -59,7 +59,7 @@ services:
       JAVA_RUNNER_MEMORY_MB: ${JAVA_RUNNER_MEMORY_MB:-256}
       JAVA_RUNNER_PIDS_LIMIT: ${JAVA_RUNNER_PIDS_LIMIT:-32}
       JAVA_RUNNER_CPUS: ${JAVA_RUNNER_CPUS:-1.0}
-      JAVA_TOOL_OPTIONS: "${BACKEND_JAVA_TOOL_OPTIONS:--Xmx1g} -Djava.rmi.server.hostname=${RMI_PUBLIC_HOST:?RMI_PUBLIC_HOST is required}"
+      JAVA_TOOL_OPTIONS: "${JAVA_TOOL_OPTIONS:--Xms256m -Xmx1024m} -Djava.rmi.server.hostname=${RMI_PUBLIC_HOST:?RMI_PUBLIC_HOST is required}"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - ${JAVA_RUNNER_WORKSPACE_ROOT:-/var/lib/int1433/runner-workspaces}:${JAVA_RUNNER_WORKSPACE_ROOT:-/var/lib/int1433/runner-workspaces}

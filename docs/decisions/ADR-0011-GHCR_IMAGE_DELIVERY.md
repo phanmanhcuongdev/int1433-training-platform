@@ -2,7 +2,7 @@
 
 Date: 2026-07-30
 
-Status: Accepted for `0.4.1`.
+Status: Accepted for `0.4.2`.
 
 ## Context
 
@@ -18,7 +18,7 @@ Build exactly three application OCI images:
 
 Use GHCR with tags:
 
-- release `v0.4.1`: `0.4.1`, `0.4`, `sha-<short-sha>`, `latest`
+- release `v0.4.2`: `0.4.2`, `0.4`, `sha-<short-sha>`, `latest`
 - main push: `main`, `sha-<short-sha>`
 
 Pull requests build images but do not push. The server deployment is pull-only with `docker compose pull` and `docker compose up -d`.

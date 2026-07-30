@@ -50,7 +50,7 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      - run: docker build -t int1433-java-runner:0.4.1 runner
+      - run: docker build -t int1433-java-runner:0.4.2 runner
       - run: ./backend/mvnw test
       - name: Verify backend test count
         run: |
@@ -82,10 +82,12 @@ jobs:
       - name: Render production Compose
         run: |
           cp deploy/.env.prod.example deploy/.env.prod
-          sed -i 's/GHCR_OWNER=replace-with-lowercase-owner/GHCR_OWNER=example-owner/' deploy/.env.prod
+          sed -i 's/GHCR_OWNER=phanmanhcuongdev/GHCR_OWNER=example-owner/' deploy/.env.prod
           sed -i 's/POSTGRES_PASSWORD=replace-with-long-random-secret/POSTGRES_PASSWORD=example-secret-not-for-production/' deploy/.env.prod
           sed -i 's/DOCKER_GID=replace-with-docker-socket-gid/DOCKER_GID=999/' deploy/.env.prod
-          sed -i 's|JAVA_RUNNER_IMAGE=ghcr.io/replace-owner/int1433-java-runner:0.4.1|JAVA_RUNNER_IMAGE=ghcr.io/example-owner/int1433-java-runner:0.4.1|' deploy/.env.prod
+          sed -i 's/CHALLENGE_PUBLIC_HOST=replace-with-server-ip-or-domain/CHALLENGE_PUBLIC_HOST=int1433.example.com/' deploy/.env.prod
+          sed -i 's/RMI_PUBLIC_HOST=replace-with-server-ip-or-domain/RMI_PUBLIC_HOST=int1433.example.com/' deploy/.env.prod
+          sed -i 's|JAVA_RUNNER_IMAGE=ghcr.io/phanmanhcuongdev/int1433-java-runner:0.4.2|JAVA_RUNNER_IMAGE=ghcr.io/example-owner/int1433-java-runner:0.4.2|' deploy/.env.prod
           docker compose --env-file deploy/.env.prod -f deploy/docker-compose.prod.yml config > /tmp/int1433-compose.yml
       - name: Verify production port boundaries
         run: |

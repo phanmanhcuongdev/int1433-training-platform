@@ -19,10 +19,10 @@ if [ "$DOCKER_GID" != "$ACTUAL_DOCKER_GID" ]; then
   printf 'Warning: DOCKER_GID=%s differs from host stat group %s. This can be valid on idmapped/rootless hosts; confirm backend can run `docker image inspect`.\n' "$DOCKER_GID" "$ACTUAL_DOCKER_GID"
 fi
 case "$CHALLENGE_PUBLIC_HOST" in
-  localhost|127.*|0.0.0.0|backend|web) die "CHALLENGE_PUBLIC_HOST must be a real public hostname or IP." ;;
+  localhost|127.*|0.0.0.0|backend|web|replace-with-server-ip-or-domain) die "CHALLENGE_PUBLIC_HOST must be a real public hostname or IP." ;;
 esac
 case "$RMI_PUBLIC_HOST" in
-  localhost|127.*|0.0.0.0|backend|web) die "RMI_PUBLIC_HOST must be a real public hostname or IP." ;;
+  localhost|127.*|0.0.0.0|backend|web|replace-with-server-ip-or-domain) die "RMI_PUBLIC_HOST must be a real public hostname or IP." ;;
 esac
 
 mkdir -p "$JAVA_RUNNER_WORKSPACE_ROOT"

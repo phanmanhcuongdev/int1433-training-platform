@@ -2,7 +2,7 @@
 
 Date: 2026-07-30
 
-Status: Accepted for `0.4.1`.
+Status: Accepted for `0.4.2`.
 
 ## Context
 
