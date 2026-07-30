@@ -37,9 +37,23 @@ free -h || true
 printf 'Disk:\n'
 df -h "$REPO_ROOT" "$JAVA_RUNNER_WORKSPACE_ROOT" || true
 
+compose_owns_tcp_port() {
+  local port="$1"
+  local containers
+  containers="$(compose ps -q 2>/dev/null || true)"
+  [ -n "$containers" ] || return 1
+  docker inspect --format '{{ range $private, $bindings := .NetworkSettings.Ports }}{{ range $binding := $bindings }}{{ $binding.HostPort }} {{ end }}{{ end }}' $containers 2>/dev/null |
+    tr ' ' '\n' |
+    grep -qx "$port"
+}
+
 for port in "${WEB_HTTP_PORT:-80}" "${CHALLENGE_TCP_PORT_MIN:-19000}" "${CHALLENGE_TCP_PORT_MAX:-19020}" "${RMI_REGISTRY_PORT:-19200}"; do
   if command -v ss >/dev/null 2>&1 && ss -ltn "( sport = :$port )" | grep -q ":$port"; then
-    die "TCP port $port is already in use."
+    if compose_owns_tcp_port "$port"; then
+      printf 'TCP port %s is already used by this Compose project; continuing for in-place update.\n' "$port"
+    else
+      die "TCP port $port is already in use by another process."
+    fi
   fi
 done
 

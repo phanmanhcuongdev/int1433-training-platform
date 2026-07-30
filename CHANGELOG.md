@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.5.2] - 2026-07-30
+
+### Fixed
+
+- Production preflight now allows in-place updates when the current Compose deployment already owns the published HTTP and challenge ports.
+
 ## [0.5.1] - 2026-07-30
 
 ### Fixed

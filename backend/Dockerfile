@@ -9,7 +9,7 @@ COPY backend/src ./src
 RUN mvn -B -q -DskipTests package
 
 FROM ${RUNTIME_IMAGE} AS runtime
-ARG VERSION=0.5.1
+ARG VERSION=0.5.2
 ARG REVISION=unknown
 ARG CREATED=unknown
 ARG SOURCE=unknown
@@ -34,7 +34,7 @@ COPY --from=build /workspace/target/training-platform-*.jar /app/app.jar
 ENV SERVER_PORT=8080 \
     SPRING_PROFILES_ACTIVE=prod \
     JAVA_RUNNER_WORKSPACE_ROOT=/var/lib/int1433/runner-workspaces \
-    JAVA_RUNNER_IMAGE=int1433-java-runner:0.5.1
+    JAVA_RUNNER_IMAGE=int1433-java-runner:0.5.2
 
 EXPOSE 8080 19000-19020 19100-19120/udp 19200
 USER int1433

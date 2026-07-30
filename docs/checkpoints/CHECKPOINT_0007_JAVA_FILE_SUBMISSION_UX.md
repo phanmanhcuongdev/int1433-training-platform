@@ -2,7 +2,7 @@
 
 Date: 2026-07-30
 
-Version: `0.5.1`
+Version: `0.5.2`
 
 ## Purpose
 
