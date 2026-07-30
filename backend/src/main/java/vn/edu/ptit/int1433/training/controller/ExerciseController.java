@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 import vn.edu.ptit.int1433.training.dto.CodeSubmissionRequest;
 import vn.edu.ptit.int1433.training.dto.ChallengeSessionResponse;
 import vn.edu.ptit.int1433.training.dto.ExerciseDetailResponse;
@@ -93,6 +94,15 @@ public class ExerciseController {
         @Valid @RequestBody CodeSubmissionRequest request
     ) {
         return submissionService.submitCode(id, participantService.parse(participantHeader), request.language(), request.sourceCode());
+    }
+
+    @PostMapping(path = "/{id}/submissions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public SubmissionResponse submitCodeFile(
+        @PathVariable String id,
+        @RequestHeader(ParticipantService.HEADER) String participantHeader,
+        @RequestParam("file") MultipartFile file
+    ) {
+        return submissionService.submitCodeFile(id, participantService.parse(participantHeader), file);
     }
 
     @PostMapping("/{id}/challenge-sessions")

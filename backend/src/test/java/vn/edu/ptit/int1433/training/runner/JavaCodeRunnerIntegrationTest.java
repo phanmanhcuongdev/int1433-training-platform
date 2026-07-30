@@ -2,6 +2,7 @@ package vn.edu.ptit.int1433.training.runner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -11,6 +12,7 @@ import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 import vn.edu.ptit.int1433.training.AbstractPostgresIntegrationTest;
 import vn.edu.ptit.int1433.training.dto.SubmissionResponse;
@@ -124,16 +126,18 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void missingMainClassReturnsCe() throws Exception {
-        SubmissionResponse response = submit("fnd-character-flush-001", """
-            class Main {
-                public static void main(String[] args) {
-                    System.out.println("HELLO");
-                }
-            }
-            """);
-
-        assertThat(response.verdict()).isEqualTo("CE");
-        assertThat(response.diagnosticCode()).isEqualTo("MISSING_MAIN_CLASS");
+        mockMvc.perform(post("/api/v1/exercises/fnd-character-flush-001/code-submissions")
+                .header(ParticipantService.HEADER, PARTICIPANT)
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(Map.of("language", "JAVA", "sourceCode", """
+                    class Main {
+                        public static void main(String[] args) {
+                            System.out.println("HELLO");
+                        }
+                    }
+                    """))))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("Mã nguồn phải chứa public class Main."));
     }
 
     @Test
@@ -144,6 +148,110 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
                 .contentType("application/json")
                 .content(objectMapper.writeValueAsString(Map.of("language", "JAVA", "sourceCode", source))))
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void multipartUploadWithRequiredFilenameReturnsAcAndPersistsSourceMetadata() throws Exception {
+        MockMultipartFile file = new MockMultipartFile(
+            "file",
+            "fnd-character-flush-001.java",
+            "text/x-java-source",
+            characterSolution().getBytes(java.nio.charset.StandardCharsets.UTF_8)
+        );
+
+        String responseBody = mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
+                .file(file)
+                .header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.verdict").value("AC"))
+            .andExpect(jsonPath("$.originalFileName").value("fnd-character-flush-001.java"))
+            .andExpect(jsonPath("$.sourceSha256").isNotEmpty())
+            .andExpect(jsonPath("$.sourceCode").value(org.hamcrest.Matchers.containsString("public class Main")))
+            .andReturn()
+            .getResponse()
+            .getContentAsString();
+
+        SubmissionResponse response = objectMapper.readValue(responseBody, SubmissionResponse.class);
+        mockMvc.perform(get("/api/v1/submissions/" + response.id()).header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.originalFileName").value("fnd-character-flush-001.java"))
+            .andExpect(jsonPath("$.sourceCode").value(org.hamcrest.Matchers.containsString("BufferedReader")));
+    }
+
+    @Test
+    void multipartUploadRejectsWrongFilename() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "Main.java", "text/x-java-source", characterSolution().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
+                .file(file)
+                .header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("Tên file phải là fnd-character-flush-001.java."));
+    }
+
+    @Test
+    void multipartUploadRejectsEmptyFile() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "fnd-character-flush-001.java", "text/x-java-source", new byte[0]);
+
+        mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
+                .file(file)
+                .header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("File không được rỗng."));
+    }
+
+    @Test
+    void multipartUploadRejectsOversizedFile() throws Exception {
+        String source = "public class Main {" + " ".repeat(20 * 1024) + "}";
+        MockMultipartFile file = new MockMultipartFile("file", "fnd-character-flush-001.java", "text/x-java-source", source.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
+                .file(file)
+                .header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("File vượt quá giới hạn 20 KB."));
+    }
+
+    @Test
+    void multipartUploadRejectsInvalidUtf8() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "fnd-character-flush-001.java", "text/x-java-source", new byte[] {(byte) 0xc3, 0x28});
+
+        mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
+                .file(file)
+                .header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("File không phải UTF-8 hợp lệ."));
+    }
+
+    @Test
+    void multipartUploadRejectsMissingPublicMain() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "fnd-character-flush-001.java", "text/x-java-source", "class Main {}".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
+                .file(file)
+                .header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("Mã nguồn phải chứa public class Main."));
+    }
+
+    @Test
+    void resubmissionCreatesNewSubmissionAndKeepsOldSource() throws Exception {
+        SubmissionResponse first = submit("fnd-character-flush-001", characterSolution());
+        SubmissionResponse second = submit("fnd-character-flush-001", """
+            public class Main {
+                public static void main(String[] args) {
+                    System.out.println("SAI");
+                }
+            }
+            """);
+
+        assertThat(first.id()).isNotEqualTo(second.id());
+        assertThat(first.verdict()).isEqualTo("AC");
+        assertThat(second.verdict()).isEqualTo("WA");
+        mockMvc.perform(get("/api/v1/submissions/" + first.id()).header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.verdict").value("AC"))
+            .andExpect(jsonPath("$.sourceCode").value(org.hamcrest.Matchers.containsString("BufferedReader")));
     }
 
     private SubmissionResponse submit(String exerciseId, String sourceCode) throws Exception {

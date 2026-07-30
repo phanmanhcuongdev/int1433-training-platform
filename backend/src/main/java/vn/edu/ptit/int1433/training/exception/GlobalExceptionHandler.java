@@ -12,6 +12,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import vn.edu.ptit.int1433.training.dto.ErrorResponse;
 
 @RestControllerAdvice
@@ -41,11 +42,17 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.BAD_REQUEST, "INVALID_PARTICIPANT", exception.getMessage(), request);
     }
 
+    @ExceptionHandler(SubmissionValidationException.class)
+    public ResponseEntity<ErrorResponse> handleSubmissionValidation(SubmissionValidationException exception, HttpServletRequest request) {
+        return error(HttpStatus.BAD_REQUEST, "INVALID_SUBMISSION", exception.getMessage(), request);
+    }
+
     @ExceptionHandler({
         ConstraintViolationException.class,
         MethodArgumentNotValidException.class,
         MethodArgumentTypeMismatchException.class,
         MissingServletRequestParameterException.class,
+        MissingServletRequestPartException.class,
         HttpMessageNotReadableException.class,
         IllegalArgumentException.class
     })

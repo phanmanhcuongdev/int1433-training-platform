@@ -33,7 +33,9 @@
   "request_format": "Một dòng UTF-8 trên stdin. Có thể không có ký tự newline cuối file.",
   "response_format": "Không có server response.",
   "processing_requirement": "trim, gom khoảng trắng bằng một dấu cách, chuyển sang chữ hoa và in một dòng.",
-  "submission_format": "Một file Java chứa public class Main.",
+  "submission_format": "Upload đúng một file fnd-character-flush-001.java. Mã nguồn bên trong phải chứa public class Main.",
+  "requiredFileName": "fnd-character-flush-001.java",
+  "submissionInstructions": "Upload đúng một file Java UTF-8, tối đa 20 KB. Backend sẽ compile source dưới tên Main.java trong runner cô lập.",
   "timeout": { "compile_ms": 10000, "run_ms": 3000 },
   "constraints": [
     "Không đọc quá một dòng đầu tiên.",
@@ -42,9 +44,24 @@
     "Output stderr không được tính là đáp án."
   ],
   "examples": [
-    { "input": "hello", "output": "HELLO" },
-    { "input": "  Lap   trinh  mang  ", "output": "LAP TRINH MANG" },
-    { "input": "xin Chào mạng", "output": "XIN CHÀO MẠNG" }
+    {
+      "title": "Ví dụ 1",
+      "input": "   hello      java",
+      "output": "HELLO JAVA",
+      "explanation": "Bỏ khoảng trắng hai đầu, gom nhiều khoảng trắng liên tiếp thành một dấu cách và chuyển sang chữ hoa."
+    },
+    {
+      "title": "Ví dụ 2",
+      "input": "  Java   Stream   and   Flush",
+      "output": "JAVA STREAM AND FLUSH",
+      "explanation": "Kết quả phải là đúng một dòng output, có newline và flush sau khi ghi."
+    },
+    {
+      "title": "Ví dụ 3",
+      "input": "xin Chào mạng",
+      "output": "XIN CHÀO MẠNG",
+      "explanation": "Input UTF-8 được giữ Unicode hợp lệ khi chuyển chữ hoa."
+    }
   ],
   "common_failures": [
     "missing_flush",

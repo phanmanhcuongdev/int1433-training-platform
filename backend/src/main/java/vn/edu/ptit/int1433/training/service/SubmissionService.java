@@ -1,12 +1,21 @@
 package vn.edu.ptit.int1433.training.service;
 
 import java.math.BigDecimal;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.CodingErrorAction;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.HexFormat;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 import vn.edu.ptit.int1433.training.dto.SubmissionResponse;
 import vn.edu.ptit.int1433.training.dto.SubmissionTestResultResponse;
 import vn.edu.ptit.int1433.training.entity.EvaluationMode;
@@ -16,6 +25,7 @@ import vn.edu.ptit.int1433.training.entity.SubmissionTestResult;
 import vn.edu.ptit.int1433.training.entity.Verdict;
 import vn.edu.ptit.int1433.training.exception.ExerciseNotFoundException;
 import vn.edu.ptit.int1433.training.exception.InvalidFilterException;
+import vn.edu.ptit.int1433.training.exception.SubmissionValidationException;
 import vn.edu.ptit.int1433.training.exception.SubmissionNotFoundException;
 import vn.edu.ptit.int1433.training.repository.ExerciseRepository;
 import vn.edu.ptit.int1433.training.repository.SubmissionRepository;
@@ -25,6 +35,7 @@ import vn.edu.ptit.int1433.training.runner.RunnerResult;
 @Service
 public class SubmissionService {
     private static final Logger log = LoggerFactory.getLogger(SubmissionService.class);
+    private static final int MAX_SOURCE_BYTES = 20 * 1024;
 
     private final ExerciseRepository exerciseRepository;
     private final SubmissionRepository submissionRepository;
@@ -38,6 +49,36 @@ public class SubmissionService {
 
     @Transactional
     public SubmissionResponse submitCode(String exerciseId, UUID participantId, String language, String sourceCode) {
+        return submitCode(exerciseId, participantId, language, sourceCode, requiredFileName(exerciseId));
+    }
+
+    @Transactional
+    public SubmissionResponse submitCodeFile(String exerciseId, UUID participantId, MultipartFile file) {
+        if (file == null || file.isEmpty()) {
+            throw new SubmissionValidationException("File không được rỗng.");
+        }
+        String originalFileName = sanitizeFilename(file.getOriginalFilename());
+        String requiredFileName = requiredFileName(exerciseId);
+        if (!requiredFileName.equals(originalFileName)) {
+            throw new SubmissionValidationException("Tên file phải là " + requiredFileName + ".");
+        }
+        if (!originalFileName.endsWith(".java")) {
+            throw new SubmissionValidationException("Chỉ chấp nhận một file .java.");
+        }
+        if (file.getSize() > MAX_SOURCE_BYTES) {
+            throw new SubmissionValidationException("File vượt quá giới hạn 20 KB.");
+        }
+        byte[] bytes;
+        try {
+            bytes = file.getBytes();
+        } catch (Exception exception) {
+            throw new SubmissionValidationException("Không đọc được file upload.");
+        }
+        String sourceCode = decodeUtf8(bytes);
+        return submitCode(exerciseId, participantId, "JAVA", sourceCode, originalFileName);
+    }
+
+    private SubmissionResponse submitCode(String exerciseId, UUID participantId, String language, String sourceCode, String originalFileName) {
         Exercise exercise = exerciseRepository.findDetailById(exerciseId)
             .orElseThrow(() -> new ExerciseNotFoundException(exerciseId));
         if (!EvaluationMode.JAVA_CODE.name().equals(exercise.getEvaluationMode())) {
@@ -46,7 +87,8 @@ public class SubmissionService {
         if (!"JAVA".equals(language)) {
             throw new InvalidFilterException("Only JAVA submissions are supported");
         }
-        Submission submission = Submission.createCode(participantId, exercise, language, sourceCode);
+        validateSource(sourceCode);
+        Submission submission = Submission.createCode(participantId, exercise, language, sourceCode, originalFileName, sha256(sourceCode));
         submissionRepository.saveAndFlush(submission);
         log.info("submission created id={} exercise={} mode=JAVA_CODE", submission.getId(), exerciseId);
 
@@ -84,6 +126,9 @@ public class SubmissionService {
             submission.getScore(),
             submission.getDiagnosticCode(),
             submission.getPublicMessage(),
+            submission.getOriginalFileName(),
+            submission.getSourceSha256(),
+            submission.getSourceCode(),
             submission.getCompileOutput(),
             submission.getRuntimeOutput(),
             submission.getCreatedAt(),
@@ -99,5 +144,51 @@ public class SubmissionService {
                 ))
                 .toList()
         );
+    }
+
+    private void validateSource(String sourceCode) {
+        if (sourceCode == null || sourceCode.isEmpty()) {
+            throw new SubmissionValidationException("File không được rỗng.");
+        }
+        if (sourceCode.getBytes(StandardCharsets.UTF_8).length > MAX_SOURCE_BYTES) {
+            throw new SubmissionValidationException("File vượt quá giới hạn 20 KB.");
+        }
+        if (!sourceCode.contains("public class Main")) {
+            throw new SubmissionValidationException("Mã nguồn phải chứa public class Main.");
+        }
+    }
+
+    private String decodeUtf8(byte[] bytes) {
+        try {
+            CharBuffer decoded = StandardCharsets.UTF_8.newDecoder()
+                .onMalformedInput(CodingErrorAction.REPORT)
+                .onUnmappableCharacter(CodingErrorAction.REPORT)
+                .decode(ByteBuffer.wrap(bytes));
+            return decoded.toString();
+        } catch (CharacterCodingException exception) {
+            throw new SubmissionValidationException("File không phải UTF-8 hợp lệ.");
+        }
+    }
+
+    private String sanitizeFilename(String originalFileName) {
+        if (originalFileName == null || originalFileName.isBlank()) {
+            throw new SubmissionValidationException("Tên file phải đúng định dạng <exercise-id>.java.");
+        }
+        String normalized = originalFileName.replace('\\', '/');
+        int slash = normalized.lastIndexOf('/');
+        return slash >= 0 ? normalized.substring(slash + 1) : normalized;
+    }
+
+    private String requiredFileName(String exerciseId) {
+        return exerciseId + ".java";
+    }
+
+    private String sha256(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            return HexFormat.of().formatHex(digest.digest(value.getBytes(StandardCharsets.UTF_8)));
+        } catch (NoSuchAlgorithmException exception) {
+            throw new IllegalStateException("SHA-256 is not available", exception);
+        }
     }
 }

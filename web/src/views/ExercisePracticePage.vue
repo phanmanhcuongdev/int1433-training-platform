@@ -2,9 +2,9 @@
 import { computed, onMounted, ref } from 'vue';
 import { RouterLink, useRouter } from 'vue-router';
 import { ApiError } from '../api/http';
-import { fetchExercise, fetchExerciseEvaluation, startChallengeSession, submitJavaCode } from '../api/exercises';
+import { fetchExercise, fetchExerciseEvaluation, startChallengeSession, submitJavaFile } from '../api/exercises';
 import { getParticipantId } from '../api/participant';
-import { minutesLabel } from '../utils/display';
+import { failureLabel, minutesLabel } from '../utils/display';
 
 const props = defineProps({
   id: {
@@ -17,13 +17,17 @@ const router = useRouter();
 const participantId = getParticipantId();
 const exercise = ref(null);
 const evaluation = ref(null);
-const sourceCode = ref('');
 const loading = ref(true);
 const submitting = ref(false);
 const error = ref('');
+const selectedFile = ref(null);
+const fileError = ref('');
+const uploadZoneActive = ref(false);
 
 const isJavaCode = computed(() => evaluation.value?.evaluationMode === 'JAVA_CODE');
 const isNetwork = computed(() => evaluation.value?.evaluationMode === 'NETWORK_CHALLENGE');
+const requiredFileName = computed(() => `${props.id}.java`);
+const canSubmitFile = computed(() => selectedFile.value && !fileError.value && !submitting.value);
 
 async function load() {
   loading.value = true;
@@ -35,7 +39,6 @@ async function load() {
     ]);
     exercise.value = exercisePayload;
     evaluation.value = evaluationPayload;
-    sourceCode.value = starterSource(props.id);
   } catch (requestError) {
     error.value = requestError instanceof ApiError ? requestError.message : 'Lỗi khi tải dữ liệu';
   } finally {
@@ -43,14 +46,15 @@ async function load() {
   }
 }
 
-async function submitCode() {
+async function submitFile() {
+  if (!canSubmitFile.value) return;
   submitting.value = true;
   error.value = '';
   try {
-    const submission = await submitJavaCode(props.id, participantId, sourceCode.value);
+    const submission = await submitJavaFile(props.id, participantId, selectedFile.value);
     router.push({ name: 'submission-detail', params: { id: submission.id } });
   } catch (requestError) {
-    error.value = requestError instanceof ApiError ? requestError.message : 'Không nộp được mã Java';
+    error.value = requestError instanceof ApiError ? requestError.message : 'Không nộp được file Java';
   } finally {
     submitting.value = false;
   }
@@ -70,33 +74,57 @@ async function startSession() {
   }
 }
 
-function starterSource(id) {
-  if (id === 'fnd-data-order-001') {
-    return `import java.io.*;
+async function handleFileInput(event) {
+  await validateAndSetFile(event.target.files);
+  event.target.value = '';
+}
 
-public class Main {
-    public static void main(String[] args) throws Exception {
-        DataInputStream in = new DataInputStream(new BufferedInputStream(System.in));
-        DataOutputStream out = new DataOutputStream(new BufferedOutputStream(System.out));
+async function handleDrop(event) {
+  uploadZoneActive.value = false;
+  await validateAndSetFile(event.dataTransfer.files);
+}
 
-        // TODO: đọc primitive theo đúng thứ tự và ghi kết quả binary.
-        out.flush();
-    }
-}`;
+async function validateAndSetFile(files) {
+  selectedFile.value = null;
+  fileError.value = '';
+
+  if (!files || files.length !== 1) {
+    fileError.value = 'Chỉ chấp nhận một file .java.';
+    return;
   }
 
-  return `import java.io.*;
-import java.nio.charset.StandardCharsets;
+  const file = files[0];
+  if (file.name !== requiredFileName.value) {
+    fileError.value = `Tên file phải là ${requiredFileName.value}.`;
+    return;
+  }
+  if (!file.name.endsWith('.java')) {
+    fileError.value = 'Chỉ chấp nhận một file .java.';
+    return;
+  }
+  if (file.size === 0) {
+    fileError.value = 'File không được rỗng.';
+    return;
+  }
+  if (file.size > 20 * 1024) {
+    fileError.value = 'File vượt quá giới hạn 20 KB.';
+    return;
+  }
 
-public class Main {
-    public static void main(String[] args) throws Exception {
-        BufferedReader in = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
-        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
+  let source = '';
+  try {
+    source = new TextDecoder('utf-8', { fatal: true }).decode(await file.arrayBuffer());
+  } catch {
+    fileError.value = 'File không phải UTF-8 hợp lệ.';
+    return;
+  }
 
-        // TODO: đọc một dòng, chuẩn hóa payload, ghi một dòng và flush.
-        out.flush();
-    }
-}`;
+  if (!source.includes('public class Main')) {
+    fileError.value = 'Mã nguồn phải chứa public class Main.';
+    return;
+  }
+
+  selectedFile.value = file;
 }
 
 onMounted(load);
@@ -108,7 +136,7 @@ onMounted(load);
     <section v-else-if="error && !exercise" class="panel state state-error">{{ error }}</section>
 
     <article v-else class="panel practice">
-      <RouterLink class="back" :to="{ name: 'exercise-detail', params: { id } }">Quay lại đề bài</RouterLink>
+      <RouterLink class="back" :to="{ name: 'exercise-detail', params: { id } }">Quay lại tổng quan</RouterLink>
       <header>
         <p class="mono">{{ exercise.id }}</p>
         <h1>{{ exercise.title }}</h1>
@@ -123,19 +151,93 @@ onMounted(load);
 
       <section v-if="error" class="state state-error">{{ error }}</section>
 
+      <section class="practice-section statement-block">
+        <h2>Đề bài</h2>
+        <p>{{ exercise.statement }}</p>
+      </section>
+
+      <section v-if="exercise.learningObjectives?.length" class="practice-section">
+        <h2>Mục tiêu học tập</h2>
+        <ul>
+          <li v-for="item in exercise.learningObjectives" :key="item">{{ item }}</li>
+        </ul>
+      </section>
+
+      <section class="practice-section">
+        <h2>Yêu cầu xử lý</h2>
+        <p>{{ exercise.processingRequirement }}</p>
+      </section>
+
+      <section v-if="exercise.requestFormat || exercise.submissionFormat" class="practice-section io-grid">
+        <div v-if="exercise.requestFormat">
+          <h2>Input</h2>
+          <pre>{{ exercise.requestFormat }}</pre>
+        </div>
+        <div v-if="exercise.submissionFormat">
+          <h2>Output / Submission</h2>
+          <pre>{{ exercise.submissionFormat }}</pre>
+        </div>
+      </section>
+
+      <section v-if="exercise.examples?.length" class="practice-section">
+        <h2>Ví dụ</h2>
+        <div class="example-grid">
+          <article v-for="(example, index) in exercise.examples" :key="index" class="example-card">
+            <h3>{{ example.title || `Ví dụ ${index + 1}` }}</h3>
+            <p class="example-label">Input</p>
+            <pre>{{ example.input }}</pre>
+            <p class="example-label">Output</p>
+            <pre>{{ example.output }}</pre>
+            <p v-if="example.explanation" class="muted">{{ example.explanation }}</p>
+          </article>
+        </div>
+      </section>
+
+      <section v-if="exercise.hints?.length" class="practice-section">
+        <h2>Gợi ý</h2>
+        <ul>
+          <li v-for="hint in exercise.hints" :key="hint">{{ hint }}</li>
+        </ul>
+      </section>
+
+      <section v-if="exercise.commonFailures?.length" class="practice-section">
+        <h2>Lỗi thường gặp</h2>
+        <ul>
+          <li v-for="failure in exercise.commonFailures" :key="failure">{{ failureLabel(failure) }}</li>
+        </ul>
+      </section>
+
       <section v-if="isJavaCode" class="practice-section">
         <div class="section-heading">
           <div>
-            <h2>Nộp mã Java</h2>
-            <p>Mã được biên dịch và chạy trong runner Docker cô lập. Không có dependency ngoài JDK 21.</p>
+            <h2>Nộp file Java</h2>
+            <p>Viết và chạy thử local bằng IDE của bạn, sau đó upload đúng một file Java. Runner chỉ nhận JDK 21, không dependency ngoài.</p>
           </div>
         </div>
-        <textarea v-model="sourceCode" class="source-editor" spellcheck="false" />
+        <label
+          class="upload-zone"
+          :class="{ active: uploadZoneActive, invalid: fileError }"
+          @dragenter.prevent="uploadZoneActive = true"
+          @dragover.prevent="uploadZoneActive = true"
+          @dragleave.prevent="uploadZoneActive = false"
+          @drop.prevent="handleDrop"
+        >
+          <input type="file" accept=".java,text/x-java-source,text/plain" @change="handleFileInput" />
+          <strong>Kéo thả file Java vào đây</strong>
+          <span>hoặc bấm để chọn file</span>
+          <code>{{ requiredFileName }}</code>
+          <small>Mã nguồn bên trong phải chứa <code>public class Main</code>, UTF-8, tối đa 20 KB.</small>
+        </label>
+        <p v-if="fileError" class="state state-error">{{ fileError }}</p>
+        <p v-if="selectedFile" class="selected-file">
+          Đã chọn: <strong>{{ selectedFile.name }}</strong>
+          <span>{{ Math.ceil(selectedFile.size / 1024) }} KB</span>
+        </p>
         <div class="actions">
-          <button type="button" :disabled="submitting || sourceCode.length > 20000" @click="submitCode">
-            {{ submitting ? 'Đang chấm...' : 'Nộp mã Java' }}
+          <button type="button" :disabled="!canSubmitFile" @click="submitFile">
+            {{ submitting ? 'Đang chấm...' : 'Nộp bài' }}
           </button>
-          <span class="muted">{{ sourceCode.length }} / 20000 ký tự</span>
+          <span class="muted">Mỗi lần nộp tạo một submission mới.</span>
         </div>
       </section>
 
@@ -181,6 +283,7 @@ onMounted(load);
 
 h1,
 h2,
+h3,
 p {
   margin: 0;
 }
@@ -194,18 +297,77 @@ header p {
   margin-top: 24px;
 }
 
-.source-editor {
-  width: 100%;
-  min-height: 360px;
-  resize: vertical;
+.statement-block p,
+li {
+  color: #405166;
+}
+
+.io-grid,
+.example-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.example-card {
   padding: 14px;
-  border: 1px solid #cfd8e3;
+  border: 1px solid #d9e0e8;
+  border-radius: 8px;
+}
+
+.example-label {
+  margin-top: 12px;
+  color: #667485;
+  font-weight: 800;
+}
+
+pre {
+  overflow: auto;
+  padding: 12px;
   border-radius: 6px;
-  background: #0f1720;
-  color: #e8eef5;
-  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
-  font-size: 0.92rem;
-  line-height: 1.55;
+  background: #eef2f6;
+  white-space: pre-wrap;
+}
+
+.upload-zone {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  place-items: center;
+  min-height: 190px;
+  padding: 22px;
+  border: 2px dashed #9fb0c3;
+  border-radius: 8px;
+  background: #f8fafc;
+  text-align: center;
+}
+
+.upload-zone.active {
+  border-color: #1f5f8b;
+  background: #eef7ff;
+}
+
+.upload-zone.invalid {
+  border-color: #d79a9a;
+}
+
+.upload-zone input {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  opacity: 0;
+}
+
+.upload-zone small {
+  color: #667485;
+}
+
+.selected-file {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 0;
+  color: #405166;
 }
 
 .actions {
@@ -228,5 +390,17 @@ button {
 button:disabled {
   cursor: not-allowed;
   opacity: 0.55;
+}
+
+@media (max-width: 680px) {
+  .actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .io-grid,
+  .example-grid {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

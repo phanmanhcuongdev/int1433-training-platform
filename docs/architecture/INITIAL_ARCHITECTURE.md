@@ -2,7 +2,7 @@
 
 ## Scope
 
-Version `0.4.2` keeps the v0.4 automatic grading slice and adds production image delivery through GHCR plus pull-only Docker Compose deployment.
+Version `0.5.0` keeps the automatic grading slice and adds a file-based Java submission workflow with submitted-source review and resubmission.
 
 Backend, PostgreSQL persistence, REST API, Vue Router, Docker-isolated Java runner, raw TCP/UDP challenge handlers, RMI service, SOAP/WSDL service and starter downloads are included. Authentication, leaderboards, Kubernetes, production deployment automation and arbitrary multi-language judging are not included.
 

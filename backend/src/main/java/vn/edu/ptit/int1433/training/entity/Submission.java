@@ -42,6 +42,12 @@ public class Submission {
     @Column(name = "source_code", columnDefinition = "text")
     private String sourceCode;
 
+    @Column(name = "original_file_name")
+    private String originalFileName;
+
+    @Column(name = "source_sha256")
+    private String sourceSha256;
+
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "submitted_answer", columnDefinition = "jsonb")
     private Map<String, Object> submittedAnswer;
@@ -75,7 +81,7 @@ public class Submission {
     @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SubmissionTestResult> testResults = new ArrayList<>();
 
-    public static Submission createCode(UUID participantId, Exercise exercise, String language, String sourceCode) {
+    public static Submission createCode(UUID participantId, Exercise exercise, String language, String sourceCode, String originalFileName, String sourceSha256) {
         Submission submission = new Submission();
         submission.id = UUID.randomUUID();
         submission.participantId = participantId;
@@ -83,6 +89,8 @@ public class Submission {
         submission.evaluationMode = EvaluationMode.JAVA_CODE;
         submission.language = language;
         submission.sourceCode = sourceCode;
+        submission.originalFileName = originalFileName;
+        submission.sourceSha256 = sourceSha256;
         submission.status = SubmissionStatus.PENDING;
         submission.verdict = Verdict.PENDING;
         submission.score = BigDecimal.ZERO;
@@ -95,6 +103,9 @@ public class Submission {
     public UUID getParticipantId() { return participantId; }
     public EvaluationMode getEvaluationMode() { return evaluationMode; }
     public String getLanguage() { return language; }
+    public String getSourceCode() { return sourceCode; }
+    public String getOriginalFileName() { return originalFileName; }
+    public String getSourceSha256() { return sourceSha256; }
     public SubmissionStatus getStatus() { return status; }
     public Verdict getVerdict() { return verdict; }
     public BigDecimal getScore() { return score; }

@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-30
+
+### Added
+
+- File-based submission workflow for JAVA_CODE exercises.
+- Required per-exercise Java filename validation.
+- Input/output examples on practice pages.
+- Submitted source viewer and inline resubmission editor.
+- Submission source metadata persistence for original filename and SHA-256.
+
+### Changed
+
+- JAVA_CODE exercises now keep the full statement, examples, submission and result in one workflow.
+- Initial browser code textarea is replaced by local-file upload.
+
 ## [0.4.2] - 2026-07-30
 
 ### Fixed

@@ -35,11 +35,20 @@ Status: complete in `0.4.0`.
 - Expand balanced content across foundation, TCP, UDP, RMI, Web Service, and debugging.
 - Add better filters and content navigation.
 
-## Phase 3 - Hardening And Expansion
+## Phase 3 - Production Delivery
 
 - Production OCI images, GHCR workflows and pull-only Compose deployment. Complete in `0.4.2`.
+
+## Phase 4 - Practice UX Hardening
+
+- File-based Java submission workflow. Complete in `0.5.0`.
+- Submitted source viewer and inline resubmission. Complete in `0.5.0`.
+- Keep network challenges on starter-project/local-client flow.
+
+## Phase 5 - Hardening And Expansion
+
 - Security review for runner and network services.
-- Add more exercises only after v0.4 flows are reviewed.
+- Add more exercises only after v0.5 flows are reviewed.
 - Improve operational docs and deployment boundaries.
 
 ## Later

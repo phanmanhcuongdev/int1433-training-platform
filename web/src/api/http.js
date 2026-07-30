@@ -20,6 +20,15 @@ export async function postJson(path, body = undefined, { signal, headers = {} } 
   });
 }
 
+export async function postForm(path, formData, { signal, headers = {} } = {}) {
+  return requestJson(path, {
+    method: 'POST',
+    body: formData,
+    headers,
+    signal
+  });
+}
+
 export async function requestJson(path, { method = 'GET', body, signal, headers = {} } = {}) {
   const response = await fetch(path, {
     method,

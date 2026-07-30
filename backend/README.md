@@ -53,6 +53,24 @@ API base path:
 /api/v1
 ```
 
+Java code submission endpoints:
+
+```text
+POST /api/v1/exercises/{exerciseId}/submissions
+Content-Type: multipart/form-data
+file=<exercise-id>.java
+```
+
+The multipart endpoint is the browser workflow for `JAVA_CODE` exercises. Backend validation requires one UTF-8 `.java` file, exact filename `<exercise-id>.java`, maximum 20 KB, and source containing `public class Main`. The runner still writes source to `Main.java` inside the isolated workspace before compiling.
+
+The older JSON endpoint remains for compatibility and for inline resubmission from the submitted source viewer:
+
+```text
+POST /api/v1/exercises/{exerciseId}/code-submissions
+```
+
+Each submission creates a new row. Submission detail responses include original filename, source SHA-256 and submitted source text for the owning anonymous participant.
+
 SOAP challenge WSDL:
 
 ```text
