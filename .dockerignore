@@ -1,0 +1,16 @@
+.git
+.github
+.idea
+.vscode
+node_modules
+web/node_modules
+web/dist
+backend/target
+**/.mvn/wrapper/dists
+runner/runtime/workspaces
+deploy/backups
+*.log
+.env
+.env.*
+INT1433_exam_research
+INT1433_training_platform_research

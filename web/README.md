@@ -3,6 +3,7 @@
 Vue 3 + Vite app for the full-stack exercise catalog.
 
 The app calls the Spring Boot REST API with relative URLs. In development, Vite proxies `/api` and `/actuator` to `http://localhost:8080`.
+In production, `web/Dockerfile` serves the built Vue app through Nginx and proxies `/api/`, `/ws`, `/ws/*` and `/actuator/health` to the backend service.
 
 ## Runtime Flow
 
@@ -39,3 +40,5 @@ npm install
 npm run frontend:dev
 npm run frontend:build
 ```
+
+The production image never serves Vite on port `5173`; it listens on port `80` and supports direct refresh of SPA routes with `try_files $uri $uri/ /index.html`.

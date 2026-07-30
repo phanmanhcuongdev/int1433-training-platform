@@ -7,6 +7,9 @@ coverage/
 .env
 .env.*
 !.env.example
+!deploy/.env.prod.example
+deploy/.env.prod
+deploy/backups/
 .idea/
 .vscode/
 *.class

@@ -12,7 +12,7 @@ Foundation exercises need Java code submission, but untrusted code must not run 
 
 ## Decision
 
-Use a Docker image `int1433-java-runner:0.4.0` for Java 21 compilation and execution. The backend invokes Docker as trusted infrastructure and applies no network, read-only filesystem, memory, CPU, PID, timeout and output limits.
+Use a Docker image such as `int1433-java-runner:0.4.1` for Java 21 compilation and execution. The backend invokes Docker as trusted infrastructure and applies no network, read-only filesystem, memory, CPU, PID, timeout and output limits.
 
 ## Consequences
 

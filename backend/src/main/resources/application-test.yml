@@ -15,3 +15,11 @@ management:
     web:
       exposure:
         include: health
+
+int1433:
+  challenge:
+    tcp-port-min: 19310
+    tcp-port-max: 19330
+    udp-port-min: 19410
+    udp-port-max: 19430
+    rmi-registry-port: 19500

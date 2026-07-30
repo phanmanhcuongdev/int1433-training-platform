@@ -2,7 +2,7 @@
 
 ## Scope
 
-Version `0.4.0` establishes a full-stack practice slice with automatic grading for ten exercises.
+Version `0.4.1` keeps the v0.4 automatic grading slice and adds production image delivery through GHCR plus pull-only Docker Compose deployment.
 
 Backend, PostgreSQL persistence, REST API, Vue Router, Docker-isolated Java runner, raw TCP/UDP challenge handlers, RMI service, SOAP/WSDL service and starter downloads are included. Authentication, leaderboards, Kubernetes, production deployment automation and arbitrary multi-language judging are not included.
 
@@ -36,6 +36,29 @@ Spring Boot
 PostgreSQL verdict/history
 ```
 
+Production runtime:
+
+```text
+Internet
+   |
+   v
+web image: Nginx :80
+   |          |
+   |          +--> Vue SPA
+   |
+   +--> /api and /ws HTTP proxy
+              |
+              v
+backend image: Spring Boot :8080
+   |          |
+   |          +--> Docker socket -> on-demand Java runner image
+   |
+   v
+postgres image, internal network only
+```
+
+Raw TCP, UDP and RMI challenge ports are published directly by the backend container. They are not proxied through HTTP Nginx locations.
+
 Authoring flow:
 
 ```text
@@ -51,7 +74,7 @@ Flyway/PostgreSQL
 ## Near-term Direction
 
 1. Review v0.4 runner and challenge boundaries.
-2. Harden deployment and operations before exposing outside trusted development use.
+2. Run production smoke checks on the target VM before opening raw challenge ports broadly.
 3. Expand content only after the ten graded flows remain stable.
 
 ## Non-goals

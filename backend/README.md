@@ -27,6 +27,8 @@ Runtime configuration comes from environment variables:
 - `DB_USER`
 - `DB_PASSWORD`
 - `SERVER_PORT`
+- `JAVA_RUNNER_IMAGE`
+- `JAVA_RUNNER_WORKSPACE_ROOT`
 
 See `.env.example` at repository root. Spring does not read `.env` automatically; export variables in your shell or use Docker Compose for PostgreSQL.
 
@@ -76,3 +78,16 @@ npm run content:check
 ```
 
 The backend owns parsing, validation and transactional upsert. The import command is intended for the `dev` profile only.
+
+## Production Container
+
+`backend/Dockerfile` builds a Java 21 runtime image with Docker CLI installed. It does not contain Node.js, Maven cache or the source repository.
+
+The backend invokes the trusted host Docker daemon to run Java submissions in the separate runner image. In containerized production this requires:
+
+- Docker socket mounted at `/var/run/docker.sock`.
+- Identical host/container workspace path: `/var/lib/int1433/runner-workspaces`.
+- `JAVA_RUNNER_WORKSPACE_ROOT=/var/lib/int1433/runner-workspaces`.
+- `JAVA_RUNNER_IMAGE=ghcr.io/<owner>/int1433-java-runner:<version>`.
+
+This is privileged infrastructure. Do not expose backend port `8080` publicly; expose only the web/Nginx container.

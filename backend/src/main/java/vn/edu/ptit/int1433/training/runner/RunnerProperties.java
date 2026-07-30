@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "int1433.runner")
 public record RunnerProperties(
     String image,
+    String workspaceRoot,
     long compileTimeoutMs,
     long runTimeoutMs,
     int memoryMb,

@@ -11,9 +11,12 @@ import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.PosixFilePermission;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -24,16 +27,30 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.stereotype.Service;
 import vn.edu.ptit.int1433.training.entity.Exercise;
 import vn.edu.ptit.int1433.training.entity.Verdict;
 
 @Service
-public class DockerJavaCodeRunner implements JavaCodeRunner {
+public class DockerJavaCodeRunner implements JavaCodeRunner, InitializingBean {
     private final RunnerProperties properties;
+    private final Path workspaceRoot;
 
     public DockerJavaCodeRunner(RunnerProperties properties) {
         this.properties = properties;
+        this.workspaceRoot = Paths.get(properties.workspaceRoot()).toAbsolutePath().normalize();
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+        try {
+            Files.createDirectories(workspaceRoot);
+            trySetOpenPermissions(workspaceRoot);
+            cleanupStaleWorkspaces();
+        } catch (IOException exception) {
+            throw new IllegalStateException("Unable to prepare Java runner workspace root", exception);
+        }
     }
 
     @Override
@@ -47,7 +64,7 @@ public class DockerJavaCodeRunner implements JavaCodeRunner {
 
         Path workspace = null;
         try {
-            workspace = Files.createTempDirectory("int1433-runner-");
+            workspace = createWorkspace();
             trySetOpenPermissions(workspace);
             Path sourceFile = workspace.resolve("Main.java");
             Files.writeString(sourceFile, sourceCode, StandardCharsets.UTF_8);
@@ -73,6 +90,15 @@ public class DockerJavaCodeRunner implements JavaCodeRunner {
                 cleanup(workspace);
             }
         }
+    }
+
+    private Path createWorkspace() throws IOException {
+        Files.createDirectories(workspaceRoot);
+        Path workspace = Files.createTempDirectory(workspaceRoot, "submission-").toAbsolutePath().normalize();
+        if (!workspace.startsWith(workspaceRoot)) {
+            throw new IOException("Runner workspace escaped configured root");
+        }
+        return workspace;
     }
 
     private RunnerResult judgeCharacter(Path workspace) throws IOException {
@@ -172,9 +198,9 @@ public class DockerJavaCodeRunner implements JavaCodeRunner {
             "--read-only",
             "--cap-drop", "ALL",
             "--security-opt", "no-new-privileges",
-            "--user", "1000:1000",
+            "--user", "10001:10001",
             "--tmpfs", "/tmp:rw,noexec,nosuid,size=64m",
-            "-v", workspace.toAbsolutePath() + ":/workspace:rw",
+            "-v", workspace.toAbsolutePath().normalize() + ":/workspace:rw",
             "-w", "/workspace",
             properties.image()
         ));
@@ -274,6 +300,27 @@ public class DockerJavaCodeRunner implements JavaCodeRunner {
                     }
                 });
         } catch (IOException ignored) {
+        }
+    }
+
+    private void cleanupStaleWorkspaces() throws IOException {
+        Instant cutoff = Instant.now().minus(Duration.ofHours(6));
+        if (!Files.isDirectory(workspaceRoot)) {
+            return;
+        }
+        try (var children = Files.list(workspaceRoot)) {
+            for (Path child : children.filter(Files::isDirectory).toList()) {
+                if (!child.getFileName().toString().startsWith("submission-")) {
+                    continue;
+                }
+                try {
+                    Instant modified = Files.getLastModifiedTime(child).toInstant();
+                    if (modified.isBefore(cutoff)) {
+                        cleanup(child);
+                    }
+                } catch (IOException ignored) {
+                }
+            }
         }
     }
 

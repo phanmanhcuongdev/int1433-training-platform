@@ -9,7 +9,7 @@ defineProps({
 
 <template>
   <section class="notice">
-    <p class="eyebrow">Version 0.4.0 · Ten graded exercises</p>
+    <p class="eyebrow">Version 0.4.1 · Ten graded exercises</p>
     <h1>Nền tảng luyện tập INT1433</h1>
     <p>
       Dự án luyện tập không chính thức cho môn INT1433. Đây không phải hệ thống PTIT,

@@ -37,6 +37,7 @@ Status: complete in `0.4.0`.
 
 ## Phase 3 - Hardening And Expansion
 
+- Production OCI images, GHCR workflows and pull-only Compose deployment. Complete in `0.4.1`.
 - Security review for runner and network services.
 - Add more exercises only after v0.4 flows are reviewed.
 - Improve operational docs and deployment boundaries.

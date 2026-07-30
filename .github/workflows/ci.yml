@@ -1,0 +1,130 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  content-and-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      # actions/checkout v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      # actions/setup-node v4.4.0
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci
+      - run: npm run validate
+      - run: npm run starters:check
+      - run: npm run frontend:build
+
+  backend-tests:
+    runs-on: ubuntu-latest
+    steps:
+      # actions/checkout v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      # actions/setup-java v4.7.1
+      - uses: actions/setup-java@c5195efecf7bdfc987ee8bae7a71cb8b11521c00
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - run: docker build -t int1433-java-runner:0.4.1 runner
+      - run: ./backend/mvnw test
+      - name: Verify backend test count
+        run: |
+          node - <<'NODE'
+          const fs = require('node:fs');
+          const dir = 'backend/target/surefire-reports';
+          let total = 0;
+          for (const file of fs.readdirSync(dir)) {
+            if (!file.endsWith('.xml')) continue;
+            const xml = fs.readFileSync(`${dir}/${file}`, 'utf8');
+            const match = xml.match(/\stests="(\d+)"/);
+            if (match) total += Number(match[1]);
+          }
+          console.log(`Surefire tests: ${total}`);
+          if (total < 40) process.exit(1);
+          NODE
+      - name: Ensure no orphan runner container
+        run: |
+          if docker ps --filter name=int1433-runner --format '{{.Names}}' | grep -q .; then
+            docker ps --filter name=int1433-runner
+            exit 1
+          fi
+
+  compose-validation:
+    runs-on: ubuntu-latest
+    steps:
+      # actions/checkout v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Render production Compose
+        run: |
+          cp deploy/.env.prod.example deploy/.env.prod
+          sed -i 's/GHCR_OWNER=replace-with-lowercase-owner/GHCR_OWNER=example-owner/' deploy/.env.prod
+          sed -i 's/POSTGRES_PASSWORD=replace-with-long-random-secret/POSTGRES_PASSWORD=example-secret-not-for-production/' deploy/.env.prod
+          sed -i 's/DOCKER_GID=replace-with-docker-socket-gid/DOCKER_GID=999/' deploy/.env.prod
+          sed -i 's|JAVA_RUNNER_IMAGE=ghcr.io/replace-owner/int1433-java-runner:0.4.1|JAVA_RUNNER_IMAGE=ghcr.io/example-owner/int1433-java-runner:0.4.1|' deploy/.env.prod
+          docker compose --env-file deploy/.env.prod -f deploy/docker-compose.prod.yml config > /tmp/int1433-compose.yml
+      - name: Verify production port boundaries
+        run: |
+          if grep -Eq '0\.0\.0\.0:(5432|8080)->|:(5432|8080):' /tmp/int1433-compose.yml; then
+            echo "PostgreSQL or backend port is public."
+            cat /tmp/int1433-compose.yml
+            exit 1
+          fi
+          grep -q '19000-19020' /tmp/int1433-compose.yml
+          grep -q '19100-19120' /tmp/int1433-compose.yml
+          grep -q '19200' /tmp/int1433-compose.yml
+
+  image-build-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      # actions/checkout v4.2.2
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      # docker/setup-buildx-action v3.11.1
+      - uses: docker/setup-buildx-action@e468171a9de216ec08956ac3ada2f0791b6bd435
+      - name: Build backend image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: false
+          load: true
+          tags: int1433-backend:ci
+          labels: org.opencontainers.image.title=INT1433 Training Platform Backend
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+      - name: Build web image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          file: web/Dockerfile
+          push: false
+          load: true
+          tags: int1433-web:ci
+          labels: org.opencontainers.image.title=INT1433 Training Platform Web
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,scope=web,mode=max
+      - name: Build runner image
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: runner
+          push: false
+          load: true
+          tags: int1433-java-runner:ci
+          labels: org.opencontainers.image.title=INT1433 Java Runner
+          cache-from: type=gha,scope=runner
+          cache-to: type=gha,scope=runner,mode=max
+      - name: Inspect built image labels
+        run: |
+          docker image inspect int1433-backend:ci --format '{{ index .Config.Labels "org.opencontainers.image.title" }}' | grep -q Backend
+          docker image inspect int1433-web:ci --format '{{ index .Config.Labels "org.opencontainers.image.title" }}' | grep -q Web
+          docker image inspect int1433-java-runner:ci --format '{{ index .Config.Labels "org.opencontainers.image.title" }}' | grep -q Runner

@@ -2,6 +2,21 @@
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-07-30
+
+### Added
+
+- Production OCI images for backend, frontend and Java runner.
+- GitHub Actions CI and GHCR publishing workflows.
+- Pull-only production Docker Compose deployment.
+- Server preflight, update, rollback and PostgreSQL backup scripts.
+- Image metadata, provenance and deployment smoke checks.
+
+### Changed
+
+- Java runner workspaces now support a containerized backend through a shared host path.
+- Production frontend is served by Nginx rather than the Vite development server.
+
 ## [0.4.0] - 2026-07-30
 
 ### Added

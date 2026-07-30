@@ -13,3 +13,19 @@ The Spring Boot API invokes Docker with this image. Submitted code is compiled a
 The Docker socket is not mounted into the runner container.
 
 The backend's access to the Docker daemon is trusted infrastructure. Do not expose Docker daemon access to end users, and do not run submitted code in the Spring Boot JVM or directly on the host.
+
+## Production Image
+
+Build locally:
+
+```bash
+docker build -t int1433-java-runner:0.4.1 runner
+```
+
+GHCR release image:
+
+```text
+ghcr.io/<owner>/int1433-java-runner:0.4.1
+```
+
+The runner image is not a long-running Compose service. The backend starts it on demand with `--network none`, memory/CPU/PID limits, read-only filesystem, dropped capabilities and a bounded shared workspace mount.
