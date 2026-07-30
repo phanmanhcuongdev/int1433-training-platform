@@ -1,7 +1,9 @@
 package vn.edu.ptit.int1433.training.challenge;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.io.BufferedReader;
@@ -17,7 +19,11 @@ import java.io.OutputStreamWriter;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetSocketAddress;
+import java.net.URI;
 import java.net.Socket;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.rmi.registry.LocateRegistry;
 import java.util.Arrays;
@@ -25,6 +31,7 @@ import java.util.UUID;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.web.servlet.MockMvc;
 import vn.edu.ptit.int1433.training.AbstractPostgresIntegrationTest;
 import vn.edu.ptit.int1433.training.contract.Product;
@@ -42,6 +49,9 @@ class ChallengeEndToEndIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Autowired
     MockMvc mockMvc;
+
+    @LocalServerPort
+    int httpPort;
 
     @Test
     void tcpBytePrimeSumAc() throws Exception {
@@ -294,30 +304,37 @@ class ChallengeEndToEndIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void soapFactorizationAc() throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
+        HttpResponse<String> wsdl = client.send(HttpRequest.newBuilder(URI.create(baseUrl() + "/ws/factorization.wsdl")).GET().build(), HttpResponse.BodyHandlers.ofString());
+        assertThat(wsdl.statusCode()).isEqualTo(200);
+        assertThat(wsdl.body()).contains("wsdl:definitions");
+
         ChallengeSessionResponse session = sessions.start("ws-data-factorization-001", PARTICIPANT);
-        mockMvc.perform(post("/ws/factorization")
-                .contentType("text/xml")
-                .content(envelope("<request><token>" + session.token() + "</token><qCode>" + session.qCode() + "</qCode></request>")))
-            .andExpect(status().isOk());
-        mockMvc.perform(post("/ws/factorization")
-                .contentType("text/xml")
-                .content(envelope("<submit><token>" + session.token() + "</token><qCode>" + session.qCode() + "</qCode><factors>2,2,2,3,3,5</factors></submit>")))
-            .andExpect(status().isOk());
+        HttpResponse<String> request = soap(client, "<f:request xmlns:f=\"http://training.int1433.ptit.edu.vn/ws/factorization\"><f:token>" + session.token() + "</f:token><f:qCode>" + session.qCode() + "</f:qCode></f:request>");
+        assertThat(request.statusCode()).isEqualTo(200);
+        assertThat(request.body()).contains("<n>360</n>");
+        HttpResponse<String> submit = soap(client, "<f:submit xmlns:f=\"http://training.int1433.ptit.edu.vn/ws/factorization\"><f:token>" + session.token() + "</f:token><f:qCode>" + session.qCode() + "</f:qCode><f:factors>2</f:factors><f:factors>2</f:factors><f:factors>2</f:factors><f:factors>3</f:factors><f:factors>3</f:factors><f:factors>5</f:factors></f:submit>");
+        assertThat(submit.statusCode()).isEqualTo(200);
         assertVerdict(session, Verdict.AC);
     }
 
     @Test
     void soapFactorizationWrongAnswer() throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
         ChallengeSessionResponse session = sessions.start("ws-data-factorization-001", PARTICIPANT);
-        mockMvc.perform(post("/ws/factorization")
-                .contentType("text/xml")
-                .content(envelope("<request><token>" + session.token() + "</token><qCode>" + session.qCode() + "</qCode></request>")))
-            .andExpect(status().isOk());
-        mockMvc.perform(post("/ws/factorization")
-                .contentType("text/xml")
-                .content(envelope("<submit><token>" + session.token() + "</token><qCode>" + session.qCode() + "</qCode><factors>2,3</factors></submit>")))
-            .andExpect(status().isOk());
+        assertThat(soap(client, "<f:request xmlns:f=\"http://training.int1433.ptit.edu.vn/ws/factorization\"><f:token>" + session.token() + "</f:token><f:qCode>" + session.qCode() + "</f:qCode></f:request>").statusCode()).isEqualTo(200);
+        assertThat(soap(client, "<f:submit xmlns:f=\"http://training.int1433.ptit.edu.vn/ws/factorization\"><f:token>" + session.token() + "</f:token><f:qCode>" + session.qCode() + "</f:qCode><f:factors>2</f:factors><f:factors>3</f:factors></f:submit>").statusCode()).isEqualTo(200);
         assertVerdict(session, Verdict.WA);
+    }
+
+    @Test
+    void soapFactorizationWrongTokenReturnsSoapFault() throws Exception {
+        HttpClient client = HttpClient.newHttpClient();
+        ChallengeSessionResponse session = sessions.start("ws-data-factorization-001", PARTICIPANT);
+        HttpResponse<String> response = soap(client, "<f:request xmlns:f=\"http://training.int1433.ptit.edu.vn/ws/factorization\"><f:token>wrong</f:token><f:qCode>" + session.qCode() + "</f:qCode></f:request>");
+        assertThat(response.statusCode()).isEqualTo(500);
+        assertThat(response.body()).contains("Fault");
+        assertVerdict(session, Verdict.PROTOCOL_ERROR);
     }
 
     private void assertVerdict(ChallengeSessionResponse session, Verdict verdict) throws Exception {
@@ -371,5 +388,16 @@ class ChallengeEndToEndIntegrationTest extends AbstractPostgresIntegrationTest {
 
     private String envelope(String inner) {
         return "<?xml version=\"1.0\"?><soap:Envelope xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\"><soap:Body>" + inner + "</soap:Body></soap:Envelope>";
+    }
+
+    private HttpResponse<String> soap(HttpClient client, String inner) throws Exception {
+        return client.send(HttpRequest.newBuilder(URI.create(baseUrl() + "/ws"))
+            .header("Content-Type", "text/xml; charset=utf-8")
+            .POST(HttpRequest.BodyPublishers.ofString(envelope(inner), StandardCharsets.UTF_8))
+            .build(), HttpResponse.BodyHandlers.ofString());
+    }
+
+    private String baseUrl() {
+        return "http://127.0.0.1:" + httpPort;
     }
 }

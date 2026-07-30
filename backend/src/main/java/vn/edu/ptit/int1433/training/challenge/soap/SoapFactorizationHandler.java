@@ -20,6 +20,6 @@ public class SoapFactorizationHandler implements ChallengeHandler {
 
     @Override
     public void start(ChallengeSession session, String plaintextToken) {
-        session.setEndpointMetadata("http://" + properties.publicHost() + ":" + properties.soapPort() + "/ws/factorization");
+        session.setEndpointMetadata("http://" + properties.publicHost() + ":" + properties.soapPort() + "/ws");
     }
 }

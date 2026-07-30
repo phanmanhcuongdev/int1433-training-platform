@@ -46,3 +46,5 @@ int1433:
     soap-port: ${SOAP_PORT:8080}
     max-active-sessions-per-participant: ${MAX_ACTIVE_SESSIONS_PER_PARTICIPANT:3}
     starter-asset-root: ${STARTER_ASSET_ROOT:../assets/starters}
+  content:
+    root: ${CONTENT_ROOT:../content}

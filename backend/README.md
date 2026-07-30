@@ -12,9 +12,10 @@ Spring Boot REST API for the INT1433 exercise catalog.
 - PostgreSQL
 - Flyway
 - Actuator health
+- Spring Web Services for the SOAP challenge
 - JUnit 5 against the local development PostgreSQL instance
 
-No Spring Security, authentication, judge, sandbox, or code execution is implemented in this version.
+No Spring Security, authentication, leaderboard, or production deployment automation is implemented in this version.
 
 ## Configuration
 
@@ -50,6 +51,12 @@ API base path:
 /api/v1
 ```
 
+SOAP challenge WSDL:
+
+```text
+/ws/factorization.wsdl
+```
+
 Health:
 
 ```text
@@ -59,3 +66,13 @@ Health:
 ## Data Source
 
 PostgreSQL is the runtime source of truth. JSON files under `content/exercises/` remain versioned authoring/import sources and traceability snapshots.
+
+Development content import:
+
+```bash
+npm run content:import:dry
+npm run content:import
+npm run content:check
+```
+
+The backend owns parsing, validation and transactional upsert. The import command is intended for the `dev` profile only.

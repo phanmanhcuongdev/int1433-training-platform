@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://training.int1433.ptit.edu.vn/ws/factorization"
+           xmlns:tns="http://training.int1433.ptit.edu.vn/ws/factorization"
+           elementFormDefault="qualified">
+
+  <xs:element name="request">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="token" type="xs:string"/>
+        <xs:element name="qCode" type="xs:string"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="requestResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="n" type="xs:int"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="submit">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="token" type="xs:string"/>
+        <xs:element name="qCode" type="xs:string"/>
+        <xs:element name="factors" type="xs:int" minOccurs="0" maxOccurs="unbounded"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+
+  <xs:element name="submitResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="accepted" type="xs:boolean"/>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -13,7 +13,7 @@
 
   <groupId>vn.edu.ptit.int1433</groupId>
   <artifactId>training-platform</artifactId>
-  <version>0.3.0</version>
+  <version>0.4.0</version>
   <name>INT1433 Training Platform Backend</name>
   <description>Spring Boot REST API for the INT1433 exercise catalog.</description>
 
@@ -37,6 +37,14 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-web-services</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>wsdl4j</groupId>
+      <artifactId>wsdl4j</artifactId>
     </dependency>
     <dependency>
       <groupId>org.flywaydb</groupId>

@@ -1,6 +1,6 @@
 {
   "name": "int1433-training-platform",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Unofficial Java-first training platform for INT1433.",
   "workspaces": [
@@ -12,8 +12,12 @@
     "frontend:build": "npm --workspace web run build",
     "backend:test": "./backend/mvnw test",
     "backend:run": "./backend/mvnw spring-boot:run -Dspring-boot.run.profiles=dev",
+    "content:import:dry": "./backend/mvnw -q spring-boot:run -Dspring-boot.run.profiles=dev -Dspring-boot.run.arguments=\"--spring.main.web-application-type=none --app.command=content-import --content.import.dry-run=true\"",
+    "content:import": "./backend/mvnw -q spring-boot:run -Dspring-boot.run.profiles=dev -Dspring-boot.run.arguments=\"--spring.main.web-application-type=none --app.command=content-import --content.import.dry-run=false\"",
+    "content:check": "./backend/mvnw -q spring-boot:run -Dspring-boot.run.profiles=dev -Dspring-boot.run.arguments=\"--spring.main.web-application-type=none --app.command=content-check --content.import.dry-run=true\"",
+    "starters:check": "node scripts/check-starters.mjs",
     "validate": "node scripts/validate-content.mjs",
-    "check": "npm run validate && npm run frontend:build && npm run backend:test",
+    "check": "npm run validate && npm run content:check && npm run starters:check && npm run frontend:build && npm run backend:test",
     "dev": "npm run frontend:dev",
     "build": "npm run frontend:build"
   }

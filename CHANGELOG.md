@@ -2,6 +2,24 @@
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-30
+
+### Added
+
+- Ten complete automatically evaluated exercises.
+- Docker-isolated Java code runner.
+- TCP, UDP, RMI and SOAP challenge services.
+- Submission and challenge-session history.
+- Route-based practice and verdict pages.
+- Downloadable network starter projects.
+- Transactional development content importer.
+- Content/database consistency verification.
+
+### Changed
+
+- Exercises now provide automatic platform grading instead of relying on manual self-checking.
+- SOAP exercise now uses a real WSDL-based SOAP stack.
+
 ## [0.3.0] - 2026-07-30
 
 ### Added

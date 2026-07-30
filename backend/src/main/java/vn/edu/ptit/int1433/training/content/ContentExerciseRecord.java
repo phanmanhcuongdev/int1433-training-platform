@@ -1,0 +1,48 @@
+package vn.edu.ptit.int1433.training.content;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import java.util.List;
+
+record ContentExerciseRecord(
+    String id,
+    String title,
+    String summary,
+    String status,
+    String track,
+    String technology,
+    String protocol,
+    String transport,
+    String streamType,
+    String difficulty,
+    String level,
+    String sourceLabel,
+    String statement,
+    String processingRequirement,
+    String requestFormat,
+    String responseFormat,
+    String submissionFormat,
+    int estimatedTimeMinutes,
+    int displayOrder,
+    JsonNode serverContract,
+    JsonNode timeoutConfig,
+    String evaluationMode,
+    String graderKey,
+    Integer timeLimitMs,
+    Integer memoryLimitMb,
+    Integer networkSessionTtlSeconds,
+    Integer maxAttempts,
+    String starterAssetPath,
+    JsonNode languagePolicy,
+    JsonNode verdictPolicy,
+    JsonNode constraints,
+    JsonNode examples,
+    String evidenceDisclaimer,
+    List<String> tags,
+    List<String> commonFailures,
+    List<String> hints,
+    List<String> learningObjectives,
+    List<String> prerequisites,
+    List<String> sourceClaimIds,
+    List<String> sourceFiles
+) {
+}

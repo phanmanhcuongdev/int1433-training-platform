@@ -122,7 +122,7 @@ public class ChallengeSessionService {
             case "udp-string-request-id-001" -> new GeneratedChallenge(requestId, Map.of("payload", "lập trình"), Map.of("requestId", requestId, "answer", "hnìrt pậl"), null);
             case "udp-object-product-001" -> new GeneratedChallenge(requestId, Map.of("name", "usb hub", "quantity", 8), Map.of("requestId", requestId, "name", "Usb Hub", "quantity", 4, "normalized", true), null);
             case "rmi-data-pythagorean-001" -> new GeneratedChallenge(requestId, Map.of("values", List.of(3, 4, 5, 6, 8, 10)), Map.of("triples", List.of(List.of(3, 4, 5))), null);
-            case "ws-data-factorization-001" -> new GeneratedChallenge(requestId, Map.of("n", 360), Map.of("factors", List.of(2, 2, 2, 3, 3, 5)), "/ws/ws-data-factorization-001");
+            case "ws-data-factorization-001" -> new GeneratedChallenge(requestId, Map.of("n", 360), Map.of("factors", List.of(2, 2, 2, 3, 3, 5)), "/ws");
             default -> new GeneratedChallenge(requestId, Map.of(), Map.of(), null);
         };
     }
@@ -150,7 +150,7 @@ public class ChallengeSessionService {
         return List.of(
             "Token chỉ hiển thị khi tạo phiên; backend chỉ lưu hash.",
             "Phiên phải được hoàn thành trước " + session.getExpiresAt() + ".",
-            "Socket/RMI/SOAP challenge handler phải được bật để chấm tự động."
+            "Platform tự động ghi nhận verdict khi client hoàn tất đúng protocol."
         );
     }
 

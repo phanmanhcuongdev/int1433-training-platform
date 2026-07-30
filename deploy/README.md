@@ -37,3 +37,5 @@ Native PostgreSQL can be used instead if it exposes the same database and creden
 - SPA routes fall back to `/index.html` for direct refresh/F5.
 
 Do not expose all actuator endpoints publicly.
+
+Raw TCP, UDP and RMI challenge traffic is not handled by normal HTTP `/api` reverse proxy rules. Production deployment must explicitly expose and firewall the configured challenge port ranges. SOAP uses the Spring Boot HTTP port at `/ws/factorization.wsdl` and `/ws`.

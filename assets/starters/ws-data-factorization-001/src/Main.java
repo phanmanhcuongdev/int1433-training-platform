@@ -4,17 +4,25 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 
 public class Main {
+    private static final String NS = "http://training.int1433.ptit.edu.vn/ws/factorization";
+
     public static void main(String[] args) throws Exception {
         String endpoint = env("ENDPOINT", "<ENDPOINT>");
+        String wsdl = env("WSDL", "<WSDL>");
         String token = env("TOKEN", "<TOKEN>");
         String qCode = env("QCODE", "<QCODE>");
 
-        String requestBody = envelope("<request><token>" + token + "</token><qCode>" + qCode + "</qCode></request>");
+        System.out.println("WSDL: " + wsdl);
+        String requestBody = envelope("<f:request xmlns:f=\"" + NS + "\"><f:token>" + token + "</f:token><f:qCode>" + qCode + "</f:qCode></f:request>");
         String requestResponse = post(endpoint, requestBody);
         int n = 0; // TODO: đọc n từ SOAP response.
-        String factors = ""; // TODO: phân tích n và submit dạng 2,2,3.
+        int[] factors = new int[0]; // TODO: phân tích n và đưa các thừa số vào mảng tăng dần.
 
-        String submitBody = envelope("<submit><token>" + token + "</token><qCode>" + qCode + "</qCode><factors>" + factors + "</factors></submit>");
+        StringBuilder factorTags = new StringBuilder();
+        for (int factor : factors) {
+            factorTags.append("<f:factors>").append(factor).append("</f:factors>");
+        }
+        String submitBody = envelope("<f:submit xmlns:f=\"" + NS + "\"><f:token>" + token + "</f:token><f:qCode>" + qCode + "</f:qCode>" + factorTags + "</f:submit>");
         post(endpoint, submitBody);
     }
 

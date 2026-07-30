@@ -14,12 +14,12 @@
   "source_label": "OBSERVED",
   "source_claim_ids": ["CLAIM-WS-001", "CLAIM-FAILURE-002"],
   "source_files": ["docs/research/exam/04_EXAM_PATTERNS.md", "docs/research/exam/05_COMMON_FAILURES.md"],
-  "statement": "Bắt đầu phiên để nhận endpoint SOAP, WSDL URL, token và qCode. Client dùng generated client hoặc SOAP request thủ công để gọi request(token, qCode), nhận n, phân tích n thành thừa số nguyên tố tăng dần và gọi submit(token, qCode, factors). Đây là SOAP Web Service, không thay bằng REST.",
+  "statement": "Bắt đầu phiên để nhận endpoint SOAP, WSDL URL, token và qCode. Client nên sinh mã từ WSDL hoặc dùng SOAP client tương thích để gọi request(token, qCode), nhận n, phân tích n thành thừa số nguyên tố tăng dần và gọi submit(token, qCode, factors). Đây là SOAP Web Service, không thay bằng REST.",
   "learning_objectives": ["Dùng WSDL endpoint đúng phiên.", "Gọi request/submit theo contract SOAP.", "Serialize array/list số nguyên đúng định dạng."],
   "prerequisites": ["SOAP/WSDL", "Generated Java client", "Prime factorization"],
   "server_contract": {
-    "wsdl": "http://<HOST>:<SOAP_PORT>/ws/ws-data-factorization-001/{sessionId}?wsdl",
-    "endpoint": "http://<HOST>:<SOAP_PORT>/ws/ws-data-factorization-001/{sessionId}",
+    "wsdl": "http://<HOST>:<SOAP_PORT>/ws/factorization.wsdl",
+    "endpoint": "http://<HOST>:<SOAP_PORT>/ws",
     "service_name": "DataService",
     "port_name": "DataServicePort"
   },

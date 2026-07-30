@@ -6,18 +6,18 @@ This project is not an official PTIT exam system, not a replacement for course a
 
 ## Goal
 
-Build a Java-first practice platform for INT1433. The project starts as a content-only site and may later grow into a local mock judge after the content schema and pilot exercises are reviewed.
+Build a Java-first practice platform for INT1433 with automatic grading for selected Java I/O and network protocol exercises. This is still a training system, not an official exam service.
 
 ## Current Status
 
-- Version: `0.3.0`
-- State: full-stack catalog foundation
+- Version: `0.4.0`
+- State: ten automatically evaluated exercises
 - Frontend: Vue 3/Vite with Vue Router and REST API calls
 - Backend: Spring Boot REST API under `/api/v1`
 - Database: PostgreSQL with Flyway migrations
-- Content: 3 draft pilot exercises
-- Search/filter/detail: implemented for pilot content
-- Judge: not implemented
+- Content: 10 reviewed exercises
+- Practice: Java code submissions plus TCP/UDP/RMI/SOAP challenge sessions
+- Judge: Docker-isolated Java runner for foundation exercises
 - Authentication: not implemented
 
 ## Tracks
@@ -31,6 +31,8 @@ Build a Java-first practice platform for INT1433. The project starts as a conten
 - Vue 3 + Vite + Vue Router + JavaScript.
 - Java 21 + Spring Boot 3.x.
 - PostgreSQL + Flyway.
+- Docker-isolated Java runner image `int1433-java-runner:0.4.0`.
+- Spring Web Services publishes the SOAP/WSDL challenge endpoint.
 - JSON content files under `content/exercises` remain authoring/import sources.
 - Node.js validation and build-time content index scripts with no extra package dependency.
 
@@ -71,6 +73,14 @@ Run the backend:
 npm run backend:run
 ```
 
+Import content into the development database:
+
+```bash
+npm run content:import:dry
+npm run content:import
+npm run content:check
+```
+
 Run the frontend in another terminal:
 
 ```bash
@@ -93,21 +103,21 @@ npm run check
 ## Frontend Features
 
 - Loads `/api/v1/exercises` through the Vite proxy in development.
-- Shows the three pilot exercises seeded into PostgreSQL by Flyway.
+- Shows the ten reviewed exercises seeded/imported into PostgreSQL.
 - Supports search by title, id, and tag.
 - Filters by technology, level, and source label.
-- Uses Vue Router routes: `/`, `/exercises`, `/exercises/:id`, `/about`.
+- Uses Vue Router routes: `/`, `/exercises`, `/exercises/:id`, `/exercises/:id/practice`, `/submissions/:submissionId`, `/challenge-sessions/:sessionId`, `/about`.
 - Includes loading, error, malformed response, and empty-result states.
+- Practice pages show verdicts from the platform; users do not self-report completion.
 
 Generated content is no longer the frontend runtime data source.
 
 ## Roadmap
 
 1. Phase 0: bootstrap, schema, 3 draft pilot exercises. Completed in `0.1.0`.
-2. Phase 1A: static site renders pilot content and grows to 12 reviewed exercises. Started in `0.2.0`.
-3. Phase 1B: grow to 24 exercises.
-4. Phase 2: local mock judge pilot.
-5. Phase 3: online judge only after security review.
+2. Phase 1A: static site renders pilot content and grows to reviewed exercises. Started in `0.2.0`.
+3. Phase 2: automatic grading product slice for 10 exercises. Completed in `0.4.0`.
+4. Phase 3: harden operations, security review, and expand content only after v0.4 is reviewed.
 
 ## Research
 

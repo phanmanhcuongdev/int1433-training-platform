@@ -9,7 +9,7 @@ defineProps({
 
 <template>
   <section class="notice">
-    <p class="eyebrow">Version 0.3.0 · Full-stack foundation</p>
+    <p class="eyebrow">Version 0.4.0 · Ten graded exercises</p>
     <h1>Nền tảng luyện tập INT1433</h1>
     <p>
       Dự án luyện tập không chính thức cho môn INT1433. Đây không phải hệ thống PTIT,
@@ -34,7 +34,8 @@ defineProps({
     <div class="status-row">
       <span>Backend REST API</span>
       <span>PostgreSQL runtime source</span>
-      <span>Chưa có judge</span>
+      <span>Java runner + network challenge</span>
+      <span>Chưa có tài khoản</span>
       <span v-if="healthStatus">Health: {{ healthStatus }}</span>
     </div>
   </section>

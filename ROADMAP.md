@@ -11,7 +11,7 @@ Status: complete in `0.1.0`.
 - Add minimal Vue/Vite frontend.
 - Add content validator.
 
-## Phase 1A - Static Site + 12 Exercises
+## Phase 1A - Static Site + Catalog
 
 Status: evolved into full-stack catalog foundation in `0.3.0`.
 
@@ -19,20 +19,29 @@ Status: evolved into full-stack catalog foundation in `0.3.0`.
 - Add Spring Boot REST API and PostgreSQL runtime catalog. Complete in `0.3.0`.
 - Add Vue Router and reload-safe detail routes. Complete in `0.3.0`.
 - Review schema and pilot content.
-- Expand to at most 12 reviewed exercises.
-- Keep judge, sandbox, authentication, and user submissions out of scope.
+- Keep authentication and social features out of scope.
+
+## Phase 2 - Ten Auto-Graded Exercises
+
+Status: complete in `0.4.0`.
+
+- Add Java code submission flow for two foundation exercises.
+- Add TCP, UDP, RMI and SOAP challenge sessions for eight network exercises.
+- Add starter downloads, participant-bound history, importer and consistency checks.
+- Keep authentication, leaderboard and production deployment out of scope.
 
 ## Phase 1B - 24 Exercises
 
 - Expand balanced content across foundation, TCP, UDP, RMI, Web Service, and debugging.
 - Add better filters and content navigation.
 
-## Phase 2 - Local Judge Pilot
+## Phase 3 - Hardening And Expansion
 
-- Add local mock server/harness only after schema and pilot content are reviewed.
-- Start with a small Java-only pilot.
+- Security review for runner and network services.
+- Add more exercises only after v0.4 flows are reviewed.
+- Improve operational docs and deployment boundaries.
 
-## Phase 3 - Online Judge
+## Later
 
 - Only after security review.
 - Never run untrusted submissions directly on the host.
