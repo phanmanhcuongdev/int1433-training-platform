@@ -1,0 +1,52 @@
+{
+  "id": "udp-object-product-001",
+  "title": "UDP Object — Sửa dữ liệu Product",
+  "summary": "Client UDP nhận datagram gồm 8 byte requestId và Product serialized, sửa object rồi gửi lại requestId kèm object hợp lệ.",
+  "display_order": 80,
+  "status": "REVIEWED",
+  "track": "EXAM",
+  "technology": "UDP",
+  "protocol": "UDP",
+  "transport": "Datagram",
+  "stream_type": "Object",
+  "difficulty": "HARD",
+  "level": "L4",
+  "source_label": "OBSERVED",
+  "source_claim_ids": ["CLAIM-UDP-001", "CLAIM-FAILURE-002"],
+  "source_files": ["docs/research/exam/04_EXAM_PATTERNS.md", "docs/research/exam/05_COMMON_FAILURES.md"],
+  "statement": "Client gửi token;qCode bằng UDP. Server trả một datagram: 8 byte requestId, sau đó là object Product serialized bằng Java. Client phải giữ nguyên đúng 8 byte đầu, sửa Product theo yêu cầu và gửi lại một datagram gồm requestId + object serialized. Server deserialize bằng allowlist class contract.",
+  "learning_objectives": ["Tách header requestId khỏi payload object.", "Dùng đúng offset/length của datagram.", "Giữ class contract khi Java serialization qua UDP."],
+  "prerequisites": ["DatagramSocket", "ObjectInputStream", "ObjectOutputStream", "Serializable"],
+  "server_contract": {
+    "request": "UTF-8 token;qCode",
+    "response": "8 raw bytes requestId + serialized Product",
+    "submission": "same 8 requestId bytes + serialized Product",
+    "max_datagram_bytes": 4096
+  },
+  "request_format": "{token};{qCode}",
+  "response_format": "byte[8] requestId + Product object bytes",
+  "processing_requirement": "Giảm quantity còn một nửa làm tròn xuống, chuẩn hóa name và set normalized=true.",
+  "submission_format": "byte[8] sameRequestId + serialized Product",
+  "timeout": { "session_ttl_seconds": 600, "io_ms": 5000 },
+  "constraints": ["Datagram tối đa 4096 byte.", "Product package cố định.", "Deserializer chỉ cho phép Product và JDK core types cần thiết."],
+  "examples": [
+    { "payload": "name='  mouse ', quantity=5", "submission": "name='Mouse', quantity=2, normalized=true" },
+    { "payload": "name='usb hub', quantity=8", "submission": "name='Usb Hub', quantity=4, normalized=true" },
+    { "payload": "name='cáp mạng', quantity=1", "submission": "name='Cáp Mạng', quantity=0, normalized=true" }
+  ],
+  "common_failures": ["missing_request_id", "wrong_request_id_bytes", "wrong_object_type", "wrong_package", "datagram_too_large", "using_full_buffer_instead_of_packet_length"],
+  "hints": ["Copy đúng 8 byte đầu bằng Arrays.copyOfRange.", "Deserialize phần sau requestId, không deserialize cả datagram.", "Giữ model Product trong starter."],
+  "starter_asset_path": "assets/starters/udp-object-product-001",
+  "evaluation_mode": "NETWORK_CHALLENGE",
+  "grader_key": "net.udp.object_product.v1",
+  "verdict_definitions": {
+    "AC": "requestId bytes và Product đúng.",
+    "WA": "Object đúng contract nhưng dữ liệu sai.",
+    "PROTOCOL_ERROR": "Sai requestId, datagram format, class hoặc package.",
+    "TLE": "Không gửi datagram hợp lệ trước timeout."
+  },
+  "judge": { "network_session_ttl_seconds": 600, "max_attempts": null },
+  "tags": ["udp", "object", "request-id", "serializable", "network-challenge"],
+  "estimated_time": "1h",
+  "evidence_disclaimer": "Bài luyện UDP object theo pattern research; không deserialize arbitrary class ngoài allowlist."
+}

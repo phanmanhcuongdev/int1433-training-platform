@@ -1,0 +1,52 @@
+{
+  "id": "tcp-byte-prime-sum-001",
+  "title": "TCP Byte Stream — Tổng các số nguyên tố",
+  "summary": "Bắt đầu phiên TCP byte stream, nhận payload nhị phân bị phân mảnh, tính số lượng và tổng các số nguyên tố rồi gửi kết quả.",
+  "display_order": 30,
+  "status": "REVIEWED",
+  "track": "EXAM",
+  "technology": "TCP",
+  "protocol": "TCP",
+  "transport": "Socket",
+  "stream_type": "Byte Stream",
+  "difficulty": "MEDIUM",
+  "level": "L3",
+  "source_label": "OBSERVED",
+  "source_claim_ids": ["CLAIM-TCP-001", "CLAIM-FAILURE-002"],
+  "source_files": ["docs/research/exam/04_EXAM_PATTERNS.md", "docs/research/exam/05_COMMON_FAILURES.md"],
+  "statement": "Bấm bắt đầu phiên để nhận host, port, token và qCode. Client Java của bạn kết nối TCP, gửi request token;qCode bằng UTF-8 có newline, nhận danh sách số nguyên được frame bằng 4 byte độ dài rồi payload byte. Server cố ý chia payload thành nhiều lần ghi, vì vậy client phải đọc đủ số byte theo frame, không giả định một lần read() là đủ.",
+  "learning_objectives": ["Đọc byte stream theo frame độ dài.", "Xử lý partial read.", "Phân biệt lỗi protocol với lỗi tính toán."],
+  "prerequisites": ["Socket", "InputStream", "OutputStream", "Số nguyên tố"],
+  "server_contract": {
+    "request": "token;qCode\\n",
+    "response": "int length, then UTF-8 payload: n;v1,v2,...,vn",
+    "submission": "primeCount;primeSum\\n",
+    "fragmented_response": true
+  },
+  "request_format": "{token};{qCode}\\n",
+  "response_format": "4 byte length big-endian + UTF-8 string n;v1,v2,...,vn",
+  "processing_requirement": "Đếm số nguyên tố và tính tổng các số nguyên tố trong payload.",
+  "submission_format": "{primeCount};{primeSum}\\n",
+  "timeout": { "session_ttl_seconds": 600, "io_ms": 5000 },
+  "constraints": ["5 <= n <= 40", "0 <= vi <= 100000", "Payload có thể bị fragment thành nhiều chunk."],
+  "examples": [
+    { "payload": "5;2,4,5,9,11", "submission": "3;18" },
+    { "payload": "4;1,6,8,10", "submission": "0;0" },
+    { "payload": "3;97,100,101", "submission": "2;198" }
+  ],
+  "common_failures": ["partial_read_assumption", "wrong_request_format", "missing_newline", "missing_flush", "wrong_prime_logic"],
+  "hints": ["Đọc đủ 4 byte length trước.", "Lặp read cho tới khi đủ length byte.", "Gửi kết quả dạng text line và flush."],
+  "starter_asset_path": "assets/starters/tcp-byte-prime-sum-001",
+  "evaluation_mode": "NETWORK_CHALLENGE",
+  "grader_key": "net.tcp.byte_prime_sum.v1",
+  "verdict_definitions": {
+    "AC": "Request, read frame và submission đúng.",
+    "WA": "Protocol đúng nhưng prime count/sum sai.",
+    "PROTOCOL_ERROR": "Sai token/qCode, không đọc đúng frame hoặc format sai.",
+    "TLE": "Không kết nối hoặc không gửi kết quả trước timeout."
+  },
+  "judge": { "network_session_ttl_seconds": 600, "max_attempts": null },
+  "tags": ["tcp", "byte-stream", "partial-read", "network-challenge"],
+  "estimated_time": "45m",
+  "evidence_disclaimer": "Pattern TCP và lỗi partial read được rút từ research; host/port là của platform luyện tập, không phải server thi PTIT."
+}

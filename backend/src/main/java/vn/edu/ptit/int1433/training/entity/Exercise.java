@@ -82,6 +82,46 @@ public class Exercise {
     @Column(name = "timeout_config", columnDefinition = "jsonb")
     private Map<String, Object> timeoutConfig;
 
+    @Column(name = "evaluation_mode")
+    private String evaluationMode;
+
+    @Column(name = "grader_key")
+    private String graderKey;
+
+    @Column(name = "time_limit_ms")
+    private Integer timeLimitMs;
+
+    @Column(name = "memory_limit_mb")
+    private Integer memoryLimitMb;
+
+    @Column(name = "network_session_ttl_seconds")
+    private Integer networkSessionTtlSeconds;
+
+    @Column(name = "max_attempts")
+    private Integer maxAttempts;
+
+    @Column(name = "starter_asset_path")
+    private String starterAssetPath;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "language_policy", columnDefinition = "jsonb")
+    private List<String> languagePolicy;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "verdict_policy", columnDefinition = "jsonb")
+    private Map<String, Object> verdictPolicy;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "constraints_json", columnDefinition = "jsonb")
+    private List<Object> constraints;
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "examples_json", columnDefinition = "jsonb")
+    private List<Object> examples;
+
+    @Column(name = "evidence_disclaimer", columnDefinition = "text")
+    private String evidenceDisclaimer;
+
     @Column(name = "created_at")
     private OffsetDateTime createdAt;
 
@@ -129,6 +169,18 @@ public class Exercise {
     public Integer getDisplayOrder() { return displayOrder; }
     public Map<String, Object> getServerContract() { return serverContract; }
     public Map<String, Object> getTimeoutConfig() { return timeoutConfig; }
+    public String getEvaluationMode() { return evaluationMode; }
+    public String getGraderKey() { return graderKey; }
+    public Integer getTimeLimitMs() { return timeLimitMs; }
+    public Integer getMemoryLimitMb() { return memoryLimitMb; }
+    public Integer getNetworkSessionTtlSeconds() { return networkSessionTtlSeconds; }
+    public Integer getMaxAttempts() { return maxAttempts; }
+    public String getStarterAssetPath() { return starterAssetPath; }
+    public List<String> getLanguagePolicy() { return languagePolicy; }
+    public Map<String, Object> getVerdictPolicy() { return verdictPolicy; }
+    public List<Object> getConstraints() { return constraints; }
+    public List<Object> getExamples() { return examples; }
+    public String getEvidenceDisclaimer() { return evidenceDisclaimer; }
     public OffsetDateTime getCreatedAt() { return createdAt; }
     public OffsetDateTime getUpdatedAt() { return updatedAt; }
     public Set<String> getTags() { return tags; }

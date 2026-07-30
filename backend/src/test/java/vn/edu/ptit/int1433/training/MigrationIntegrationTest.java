@@ -15,13 +15,13 @@ class MigrationIntegrationTest extends AbstractPostgresIntegrationTest {
     private JdbcTemplate jdbcTemplate;
 
     @Test
-    void flywayCreatesSchemaAndSeedsThreeExercises() {
-        assertThat(flyway.info().applied()).hasSizeGreaterThanOrEqualTo(2);
+    void flywayCreatesSchemaAndSeedsTenExercises() {
+        assertThat(flyway.info().applied()).hasSizeGreaterThanOrEqualTo(4);
 
         Integer exerciseCount = jdbcTemplate.queryForObject("select count(*) from exercises", Integer.class);
         Integer tagCount = jdbcTemplate.queryForObject("select count(*) from exercise_tags", Integer.class);
 
-        assertThat(exerciseCount).isEqualTo(3);
-        assertThat(tagCount).isEqualTo(9);
+        assertThat(exerciseCount).isEqualTo(10);
+        assertThat(tagCount).isGreaterThanOrEqualTo(40);
     }
 }

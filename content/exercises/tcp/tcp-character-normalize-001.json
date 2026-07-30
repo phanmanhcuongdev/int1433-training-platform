@@ -1,0 +1,51 @@
+{
+  "id": "tcp-character-normalize-001",
+  "title": "TCP Character Stream — Chuẩn hóa từ",
+  "summary": "Client TCP line-based nhận một dòng text, chuẩn hóa từng từ và gửi lại một dòng kết quả có newline.",
+  "display_order": 50,
+  "status": "REVIEWED",
+  "track": "EXAM",
+  "technology": "TCP",
+  "protocol": "TCP",
+  "transport": "Socket",
+  "stream_type": "Character Stream",
+  "difficulty": "EASY",
+  "level": "L2",
+  "source_label": "OBSERVED",
+  "source_claim_ids": ["CLAIM-TCP-001", "CLAIM-FAILURE-002"],
+  "source_files": ["docs/research/exam/04_EXAM_PATTERNS.md", "docs/research/exam/05_COMMON_FAILURES.md"],
+  "statement": "Client kết nối TCP, gửi request line token;qCode, nhận một dòng text, chuẩn hóa mỗi từ thành chữ cái đầu viết hoa và phần còn lại viết thường, rồi gửi lại đúng một dòng. Newline và flush là bắt buộc để server quan sát submission.",
+  "learning_objectives": ["Tuân thủ request/response/submission line contract.", "Không dùng console output làm submission.", "Nhận diện thiếu newline/flush qua timeout."],
+  "prerequisites": ["Socket", "BufferedReader", "BufferedWriter", "String processing"],
+  "server_contract": {
+    "request": "token;qCode\\n",
+    "response": "raw text line",
+    "submission": "normalized text line"
+  },
+  "request_format": "{token};{qCode}\\n",
+  "response_format": "{rawText}\\n",
+  "processing_requirement": "Gom khoảng trắng, viết hoa chữ cái đầu mỗi từ và viết thường phần còn lại.",
+  "submission_format": "{normalizedText}\\n",
+  "timeout": { "session_ttl_seconds": 600, "io_ms": 5000 },
+  "constraints": ["Text có thể chứa tiếng Việt Unicode.", "Khoảng trắng lặp phải được gom.", "Thiếu newline/flush có thể thành TLE."],
+  "examples": [
+    { "payload": "nGUYEN   vAn a", "submission": "Nguyen Van A" },
+    { "payload": "lẬp TRÌNH   mẠng", "submission": "Lập Trình Mạng" },
+    { "payload": "  tcp  udp ", "submission": "Tcp Udp" }
+  ],
+  "common_failures": ["missing_newline", "missing_flush", "console_output_used_as_submission", "wrong_request_format", "wrong_encoding"],
+  "hints": ["Dùng BufferedWriter.newLine().", "Flush cả request và submission.", "Đừng in debug vào socket."],
+  "starter_asset_path": "assets/starters/tcp-character-normalize-001",
+  "evaluation_mode": "NETWORK_CHALLENGE",
+  "grader_key": "net.tcp.character_normalize.v1",
+  "verdict_definitions": {
+    "AC": "Submission line đúng.",
+    "WA": "Format line đúng nhưng nội dung chuẩn hóa sai.",
+    "PROTOCOL_ERROR": "Sai request hoặc gửi nhiều dòng không hợp lệ.",
+    "TLE": "Không gửi newline/flush hoặc quá hạn."
+  },
+  "judge": { "network_session_ttl_seconds": 600, "max_attempts": null },
+  "tags": ["tcp", "character-stream", "flush", "network-challenge"],
+  "estimated_time": "35m",
+  "evidence_disclaimer": "Pattern TCP character stream dựa trên research snapshot; server là mock server của platform."
+}

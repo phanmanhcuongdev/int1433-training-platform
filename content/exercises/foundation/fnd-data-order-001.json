@@ -1,0 +1,83 @@
+{
+  "id": "fnd-data-order-001",
+  "title": "Thứ tự primitive trong Data Stream",
+  "summary": "Nộp Java code đọc primitive nhị phân bằng DataInputStream và ghi kết quả nhị phân bằng DataOutputStream đúng thứ tự.",
+  "display_order": 20,
+  "status": "REVIEWED",
+  "track": "EXAM",
+  "technology": "Java I/O",
+  "protocol": null,
+  "transport": "stdin/stdout",
+  "stream_type": "Data Stream",
+  "difficulty": "MEDIUM",
+  "level": "L1",
+  "source_label": "EXTENDED",
+  "source_claim_ids": ["CLAIM-PLATFORM-FOUNDATION-002", "CLAIM-FAILURE-002"],
+  "source_files": [
+    "docs/research/platform/01_EXERCISE_TAXONOMY.md",
+    "docs/research/exam/05_COMMON_FAILURES.md"
+  ],
+  "statement": "Viết chương trình Java đọc một byte stream nhị phân từ stdin bằng DataInputStream theo thứ tự: int a, int b, long c, double d. Chương trình ghi ra stdout bằng DataOutputStream theo thứ tự: int gcd(a,b), long lcm(a,b), long c + a + b, double d * 2.0. Đây là bài luyện binary contract; không được chuyển input thành text.",
+  "learning_objectives": [
+    "Đọc/ghi primitive theo đúng thứ tự nhị phân.",
+    "Nhận diện lỗi đổi thứ tự read/write trong Data Stream.",
+    "Không trộn text stream với binary stream."
+  ],
+  "prerequisites": ["DataInputStream", "DataOutputStream", "Ước chung lớn nhất", "Bội chung nhỏ nhất"],
+  "server_contract": {
+    "mode": "JAVA_CODE",
+    "entrypoint": "public class Main",
+    "input": "stdin binary primitives",
+    "output": "stdout binary primitives"
+  },
+  "request_format": "int a, int b, long c, double d theo chuẩn DataInputStream của Java.",
+  "response_format": "Không có server response.",
+  "processing_requirement": "Tính gcd, lcm, tổng long và double nhân đôi từ primitive đã đọc.",
+  "submission_format": "int gcd, long lcm, long total, double doubled theo chuẩn DataOutputStream.",
+  "timeout": { "compile_ms": 10000, "run_ms": 3000 },
+  "constraints": [
+    "1 <= a,b <= 100000",
+    "Giá trị lcm nằm trong long.",
+    "Không in text ra stdout.",
+    "Không dùng package."
+  ],
+  "examples": [
+    { "input": "a=12,b=18,c=5,d=1.5", "output": "gcd=6,lcm=36,total=35,doubled=3.0" },
+    { "input": "a=7,b=13,c=100,d=2.25", "output": "gcd=1,lcm=91,total=120,doubled=4.5" },
+    { "input": "a=21,b=21,c=0,d=-1.0", "output": "gcd=21,lcm=21,total=42,doubled=-2.0" }
+  ],
+  "common_failures": [
+    "wrong_primitive_order",
+    "text_output_for_binary_contract",
+    "integer_overflow",
+    "missing_flush",
+    "extra_debug_stdout"
+  ],
+  "hints": [
+    "DataInputStream/DataOutputStream dùng big-endian theo chuẩn Java.",
+    "Ghi đúng loại primitive; writeInt khác writeLong.",
+    "Flush DataOutputStream sau khi ghi đủ bốn giá trị."
+  ],
+  "starter_code": {
+    "language": "JAVA",
+    "source": "import java.io.*;\n\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        DataInputStream in = new DataInputStream(new BufferedInputStream(System.in));\n        DataOutputStream out = new DataOutputStream(new BufferedOutputStream(System.out));\n        // Đọc primitive và ghi kết quả tại đây.\n        out.flush();\n    }\n}\n"
+  },
+  "evaluation_mode": "JAVA_CODE",
+  "grader_key": "java.fnd.data_order.v1",
+  "verdict_definitions": {
+    "AC": "Mọi hidden test đúng cả giá trị và thứ tự primitive.",
+    "WA": "Protocol binary đúng nhưng giá trị sai.",
+    "CE": "Không biên dịch được.",
+    "RE": "Runtime exception hoặc stream lỗi.",
+    "TLE": "Quá thời gian chạy."
+  },
+  "judge": {
+    "language_policy": ["JAVA"],
+    "time_limit_ms": 3000,
+    "memory_limit_mb": 256,
+    "runner_required": true
+  },
+  "tags": ["foundation", "data-stream", "binary-contract", "java-code"],
+  "estimated_time": "30m",
+  "evidence_disclaimer": "Bài mở rộng để củng cố Data Stream trước khi vào TCP Data Stream; không phải đề thi chính thức."
+}

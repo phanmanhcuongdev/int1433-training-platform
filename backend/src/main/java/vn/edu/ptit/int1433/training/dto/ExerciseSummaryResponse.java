@@ -14,6 +14,7 @@ public record ExerciseSummaryResponse(
     String difficulty,
     String level,
     String sourceLabel,
+    String evaluationMode,
     Integer estimatedTimeMinutes,
     Integer displayOrder,
     List<String> tags

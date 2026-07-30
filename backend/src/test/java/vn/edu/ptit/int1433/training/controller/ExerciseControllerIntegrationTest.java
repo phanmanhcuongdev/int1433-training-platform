@@ -3,6 +3,7 @@ package vn.edu.ptit.int1433.training.controller;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -21,8 +22,8 @@ class ExerciseControllerIntegrationTest extends AbstractPostgresIntegrationTest 
     void listReturnsOk() throws Exception {
         mockMvc.perform(get("/api/v1/exercises"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.totalItems").value(3))
-            .andExpect(jsonPath("$.items", hasSize(3)));
+            .andExpect(jsonPath("$.totalItems").value(10))
+            .andExpect(jsonPath("$.items", hasSize(10)));
     }
 
     @Test
@@ -30,15 +31,24 @@ class ExerciseControllerIntegrationTest extends AbstractPostgresIntegrationTest 
         mockMvc.perform(get("/api/v1/exercises").queryParam("technology", "TCP").queryParam("level", "L2"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.totalItems").value(1))
-            .andExpect(jsonPath("$.items[0].id").value("tcp-character-001"));
+            .andExpect(jsonPath("$.items[0].id").value("tcp-character-normalize-001"));
     }
 
     @Test
     void detailReturnsOk() throws Exception {
-        mockMvc.perform(get("/api/v1/exercises/tcp-character-001"))
+        mockMvc.perform(get("/api/v1/exercises/tcp-character-normalize-001"))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.id").value("tcp-character-001"))
-            .andExpect(jsonPath("$.sourceLabel").value("OBSERVED"));
+            .andExpect(jsonPath("$.id").value("tcp-character-normalize-001"))
+            .andExpect(jsonPath("$.sourceLabel").value("OBSERVED"))
+            .andExpect(jsonPath("$.evaluationMode").value("NETWORK_CHALLENGE"));
+    }
+
+    @Test
+    void starterDownloadReturnsZipForNetworkExercise() throws Exception {
+        mockMvc.perform(get("/api/v1/exercises/tcp-byte-prime-sum-001/starter"))
+            .andExpect(status().isOk())
+            .andExpect(header().string("Content-Type", containsString("application/zip")))
+            .andExpect(header().string("Content-Disposition", containsString("tcp-byte-prime-sum-001-starter.zip")));
     }
 
     @Test

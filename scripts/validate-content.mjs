@@ -15,6 +15,8 @@ const requiredFields = [
   'source_label',
   'statement',
   'processing_requirement',
+  'evaluation_mode',
+  'grader_key',
   'common_failures',
   'tags',
   'estimated_time'
@@ -25,10 +27,12 @@ const enums = {
   source_label: ['OBSERVED', 'STRONG_PATTERN', 'EXTENDED', 'CHALLENGE'],
   track: ['EXAM', 'EXTENDED_NETWORKING', 'BACKEND_DISTRIBUTED'],
   difficulty: ['EASY', 'MEDIUM', 'HARD'],
-  level: ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6']
+  level: ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6'],
+  evaluation_mode: ['OUTPUT_CHECK', 'JAVA_CODE', 'NETWORK_CHALLENGE']
 };
 
 const realIpPattern = /203\.162\.10\.109|172\.188\.19\.218/;
+const unfinishedTextPattern = /\b(?:TODO|FIXME|lorem ipsum|placeholder)\b/i;
 const idPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const estimatedTimePattern = /^(?:[1-9]\d*h(?:[1-5]?\dm)?|[1-9]\d*m)$/;
 
@@ -102,6 +106,20 @@ async function validateExercise(file, data, seenIds) {
     }
   }
 
+  for (const arrayField of ['learning_objectives', 'constraints', 'examples', 'hints']) {
+    if (!(arrayField in data) || !Array.isArray(data[arrayField]) || data[arrayField].length === 0) {
+      errors.push(`${rel}: ${arrayField} must be a non-empty array for complete exercises`);
+    }
+  }
+
+  if (!data.evidence_disclaimer || typeof data.evidence_disclaimer !== 'string') {
+    errors.push(`${rel}: evidence_disclaimer is required`);
+  }
+
+  if (!data.verdict_definitions || typeof data.verdict_definitions !== 'object') {
+    errors.push(`${rel}: verdict_definitions is required`);
+  }
+
   if (typeof data.estimated_time === 'string' && !estimatedTimePattern.test(data.estimated_time)) {
     errors.push(`${rel}: estimated_time must look like 15m, 30m, 1h, or 1h30m`);
   }
@@ -122,6 +140,30 @@ async function validateExercise(file, data, seenIds) {
     }
   }
 
+  if (!Array.isArray(data.source_claim_ids) || data.source_claim_ids.length === 0) {
+    errors.push(`${rel}: source_claim_ids is required for traceability`);
+  }
+
+  if (!Array.isArray(data.source_files) || data.source_files.length === 0) {
+    errors.push(`${rel}: source_files is required for traceability`);
+  }
+
+  if (data.evaluation_mode === 'JAVA_CODE') {
+    if (!data.judge || data.judge.runner_required !== true) {
+      errors.push(`${rel}: JAVA_CODE exercises must require runner config`);
+    }
+  }
+
+  if (data.evaluation_mode === 'NETWORK_CHALLENGE') {
+    if (!data.timeout || typeof data.timeout.session_ttl_seconds !== 'number') {
+      errors.push(`${rel}: NETWORK_CHALLENGE exercises must define timeout.session_ttl_seconds`);
+    }
+
+    if (!data.starter_asset_path || typeof data.starter_asset_path !== 'string') {
+      errors.push(`${rel}: NETWORK_CHALLENGE exercises must define starter_asset_path`);
+    }
+  }
+
   if (Array.isArray(data.source_files)) {
     for (const sourceFile of data.source_files) {
       if (!isRelativeRepoPath(sourceFile)) {
@@ -137,12 +179,20 @@ async function validateExercise(file, data, seenIds) {
     errors.push(`${rel}: do not hard-code old real exam IPs; use <HOST> and <PORT>`);
   }
 
+  if (unfinishedTextPattern.test(serialized)) {
+    errors.push(`${rel}: unfinished placeholder text such as TODO/FIXME/lorem is not allowed`);
+  }
+
   return errors;
 }
 
 const files = await listJsonFiles(exercisesDir);
 const seenIds = new Map();
 const errors = [];
+
+if (files.length !== 10) {
+  errors.push(`content/exercises: expected exactly 10 exercise file(s), found ${files.length}`);
+}
 
 for (const file of files) {
   let data;

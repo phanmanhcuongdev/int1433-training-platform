@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import vn.edu.ptit.int1433.training.dto.ExerciseDetailResponse;
+import vn.edu.ptit.int1433.training.dto.ExerciseEvaluationResponse;
 import vn.edu.ptit.int1433.training.dto.ExerciseFilterResponse;
 import vn.edu.ptit.int1433.training.dto.ExerciseSummaryResponse;
 import vn.edu.ptit.int1433.training.dto.PaginatedResponse;
@@ -71,6 +72,12 @@ public class ExerciseService {
     public ExerciseDetailResponse getById(String id) {
         return repository.findDetailById(id)
             .map(mapper::toDetail)
+            .orElseThrow(() -> new ExerciseNotFoundException(id));
+    }
+
+    public ExerciseEvaluationResponse getEvaluation(String id) {
+        return repository.findDetailById(id)
+            .map(mapper::toEvaluation)
             .orElseThrow(() -> new ExerciseNotFoundException(id));
     }
 

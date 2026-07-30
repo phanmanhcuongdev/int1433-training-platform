@@ -17,8 +17,43 @@ export const failureLabels = {
   stale_port_assumption: 'Giả định port cũ vẫn còn đúng'
 };
 
+export const verdictLabels = {
+  PENDING: 'Đang chờ',
+  RUNNING: 'Đang chạy',
+  AC: 'AC',
+  WA: 'Sai kết quả',
+  CE: 'Lỗi biên dịch',
+  RE: 'Lỗi runtime',
+  TLE: 'Quá thời gian',
+  PROTOCOL_ERROR: 'Sai protocol',
+  EXPIRED: 'Phiên hết hạn',
+  INTERNAL_ERROR: 'Lỗi hệ thống'
+};
+
+export const challengeStateLabels = {
+  ACTIVE: 'Đã tạo phiên',
+  CONNECTED: 'Client đã kết nối',
+  REQUEST_ACCEPTED: 'Request hợp lệ',
+  RESPONSE_SENT: 'Server đã gửi dữ liệu',
+  SUBMISSION_RECEIVED: 'Đã nhận submission',
+  AC: 'AC',
+  WA: 'Sai kết quả',
+  PROTOCOL_ERROR: 'Sai protocol',
+  TIMEOUT: 'Quá thời gian',
+  EXPIRED: 'Phiên hết hạn',
+  INTERNAL_ERROR: 'Lỗi hệ thống'
+};
+
 export function failureLabel(code) {
   return failureLabels[code] || code;
+}
+
+export function verdictLabel(code) {
+  return verdictLabels[code] || code || 'Chưa có verdict';
+}
+
+export function challengeStateLabel(code) {
+  return challengeStateLabels[code] || code || 'Chưa có trạng thái';
 }
 
 export function minutesLabel(minutes) {

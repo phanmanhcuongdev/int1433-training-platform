@@ -1,0 +1,51 @@
+{
+  "id": "tcp-data-gcd-lcm-001",
+  "title": "TCP Data Stream — GCD, LCM, tổng và tích",
+  "summary": "Client TCP dùng DataInputStream/DataOutputStream, đọc primitive đúng thứ tự và gửi lại bốn kết quả primitive đúng thứ tự.",
+  "display_order": 40,
+  "status": "REVIEWED",
+  "track": "EXAM",
+  "technology": "TCP",
+  "protocol": "TCP",
+  "transport": "Socket",
+  "stream_type": "Data Stream",
+  "difficulty": "MEDIUM",
+  "level": "L3",
+  "source_label": "OBSERVED",
+  "source_claim_ids": ["CLAIM-TCP-001", "CLAIM-FAILURE-002"],
+  "source_files": ["docs/research/exam/04_EXAM_PATTERNS.md", "docs/research/exam/05_COMMON_FAILURES.md"],
+  "statement": "Client kết nối TCP, gửi token và qCode qua DataOutputStream bằng writeUTF(token), writeUTF(qCode), flush. Server gửi int a, int b, int c, int d. Client gửi lại theo đúng thứ tự: int gcd(a,b), long lcm(a,b), int sum(a,b,c,d), long product(a,b,c,d).",
+  "learning_objectives": ["Tuân thủ thứ tự primitive trong Data Stream.", "Tách lỗi sai thứ tự write với lỗi sai giá trị.", "Flush sau request và submission."],
+  "prerequisites": ["Socket", "DataInputStream", "DataOutputStream", "GCD/LCM"],
+  "server_contract": {
+    "request": "writeUTF(token), writeUTF(qCode)",
+    "response": "readInt a,b,c,d",
+    "submission": "writeInt gcd, writeLong lcm, writeInt sum, writeLong product"
+  },
+  "request_format": "DataOutputStream.writeUTF(token); writeUTF(qCode); flush()",
+  "response_format": "DataInputStream.readInt() bốn lần.",
+  "processing_requirement": "Tính gcd/lcm của a,b; tổng và tích của bốn số.",
+  "submission_format": "writeInt(gcd); writeLong(lcm); writeInt(sum); writeLong(product); flush()",
+  "timeout": { "session_ttl_seconds": 600, "io_ms": 5000 },
+  "constraints": ["1 <= a,b,c,d <= 5000", "product nằm trong long", "Sai thứ tự primitive là Protocol Error."],
+  "examples": [
+    { "payload": "12,18,3,4", "submission": "6,36,37,2592" },
+    { "payload": "7,13,2,5", "submission": "1,91,27,910" },
+    { "payload": "21,21,1,2", "submission": "21,21,45,882" }
+  ],
+  "common_failures": ["wrong_primitive_order", "missing_flush", "text_stream_used_for_data_stream", "integer_overflow"],
+  "hints": ["Không dùng PrintWriter cho bài này.", "Server phân biệt writeInt và writeLong.", "Gửi đủ bốn primitive rồi flush."],
+  "starter_asset_path": "assets/starters/tcp-data-gcd-lcm-001",
+  "evaluation_mode": "NETWORK_CHALLENGE",
+  "grader_key": "net.tcp.data_gcd_lcm.v1",
+  "verdict_definitions": {
+    "AC": "Protocol và giá trị đúng.",
+    "WA": "Primitive sequence đúng nhưng giá trị sai.",
+    "PROTOCOL_ERROR": "Sai thứ tự primitive hoặc dùng stream không đúng.",
+    "TLE": "Không gửi đủ dữ liệu trước timeout."
+  },
+  "judge": { "network_session_ttl_seconds": 600, "max_attempts": null },
+  "tags": ["tcp", "data-stream", "primitive-order", "network-challenge"],
+  "estimated_time": "45m",
+  "evidence_disclaimer": "Pattern Data Stream được dùng để luyện kỹ năng thi; không cố định host/port theo PTIT."
+}

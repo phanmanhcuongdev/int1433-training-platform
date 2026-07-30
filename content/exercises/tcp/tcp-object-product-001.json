@@ -1,0 +1,52 @@
+{
+  "id": "tcp-object-product-001",
+  "title": "TCP Object Stream — Chuẩn hóa Product",
+  "summary": "Client TCP Object Stream nhận Product Serializable đúng package, chỉnh dữ liệu và gửi lại object theo contract.",
+  "display_order": 60,
+  "status": "REVIEWED",
+  "track": "EXAM",
+  "technology": "TCP",
+  "protocol": "TCP",
+  "transport": "Socket",
+  "stream_type": "Object Stream",
+  "difficulty": "HARD",
+  "level": "L4",
+  "source_label": "OBSERVED",
+  "source_claim_ids": ["CLAIM-TCP-001", "CLAIM-FAILURE-002"],
+  "source_files": ["docs/research/exam/04_EXAM_PATTERNS.md", "docs/research/exam/05_COMMON_FAILURES.md"],
+  "statement": "Client kết nối TCP Object Stream. Tạo ObjectOutputStream trước, gửi token và qCode bằng writeUTF rồi flush. Server trả về object Product thuộc package vn.edu.ptit.int1433.training.contract. Client chuẩn hóa name, làm tròn price về 2 chữ số thập phân, đặt normalized=true và gửi lại Product.",
+  "learning_objectives": ["Dùng ObjectInputStream/ObjectOutputStream đúng thứ tự.", "Giữ đúng package/class/serialVersionUID.", "Không deserialize class ngoài allowlist."],
+  "prerequisites": ["Serializable", "Object stream", "Package Java", "Decimal rounding"],
+  "server_contract": {
+    "request": "ObjectOutputStream.writeUTF(token), writeUTF(qCode), flush",
+    "response": "Product object",
+    "submission": "Product object",
+    "class": "vn.edu.ptit.int1433.training.contract.Product"
+  },
+  "request_format": "writeUTF(token); writeUTF(qCode); flush()",
+  "response_format": "Product(id:String, name:String, price:double, normalized:boolean)",
+  "processing_requirement": "Gom khoảng trắng name, viết hoa chữ cái đầu mỗi từ, làm tròn price 2 chữ số, set normalized=true.",
+  "submission_format": "writeObject(product); flush()",
+  "timeout": { "session_ttl_seconds": 600, "io_ms": 5000 },
+  "constraints": ["Product phải Serializable.", "serialVersionUID = 1433001L.", "Sai package hoặc field type là Protocol Error."],
+  "examples": [
+    { "payload": "name='  usb   cable ', price=12.345", "submission": "name='Usb Cable', price=12.35, normalized=true" },
+    { "payload": "name='java BOOK', price=50.0", "submission": "name='Java Book', price=50.0, normalized=true" },
+    { "payload": "name='mạng máy tính', price=19.994", "submission": "name='Mạng Máy Tính', price=19.99, normalized=true" }
+  ],
+  "common_failures": ["object_stream_order_deadlock", "wrong_package", "serial_version_mismatch", "wrong_object_type", "missing_flush"],
+  "hints": ["Tạo ObjectOutputStream trước và flush header.", "Dùng đúng model trong starter.", "Không đổi tên package hoặc field."],
+  "starter_asset_path": "assets/starters/tcp-object-product-001",
+  "evaluation_mode": "NETWORK_CHALLENGE",
+  "grader_key": "net.tcp.object_product.v1",
+  "verdict_definitions": {
+    "AC": "Object contract và dữ liệu đúng.",
+    "WA": "Object đúng kiểu nhưng dữ liệu xử lý sai.",
+    "PROTOCOL_ERROR": "Sai package, serialVersionUID, request order hoặc object type.",
+    "TLE": "Deadlock stream hoặc quá hạn."
+  },
+  "judge": { "network_session_ttl_seconds": 600, "max_attempts": null },
+  "tags": ["tcp", "object-stream", "serializable", "product", "network-challenge"],
+  "estimated_time": "1h",
+  "evidence_disclaimer": "Bài luyện Object Stream theo pattern exam contract; không dùng object từ server PTIT thật."
+}

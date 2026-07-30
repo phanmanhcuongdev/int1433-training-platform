@@ -21,9 +21,24 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.NOT_FOUND, "EXERCISE_NOT_FOUND", exception.getMessage(), request);
     }
 
+    @ExceptionHandler(SubmissionNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleSubmissionNotFound(SubmissionNotFoundException exception, HttpServletRequest request) {
+        return error(HttpStatus.NOT_FOUND, "SUBMISSION_NOT_FOUND", exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(ChallengeSessionNotFoundException.class)
+    public ResponseEntity<ErrorResponse> handleChallengeSessionNotFound(ChallengeSessionNotFoundException exception, HttpServletRequest request) {
+        return error(HttpStatus.NOT_FOUND, "CHALLENGE_SESSION_NOT_FOUND", exception.getMessage(), request);
+    }
+
     @ExceptionHandler(InvalidFilterException.class)
     public ResponseEntity<ErrorResponse> handleInvalidFilter(InvalidFilterException exception, HttpServletRequest request) {
         return error(HttpStatus.BAD_REQUEST, "INVALID_FILTER", exception.getMessage(), request);
+    }
+
+    @ExceptionHandler(ParticipantException.class)
+    public ResponseEntity<ErrorResponse> handleParticipant(ParticipantException exception, HttpServletRequest request) {
+        return error(HttpStatus.BAD_REQUEST, "INVALID_PARTICIPANT", exception.getMessage(), request);
     }
 
     @ExceptionHandler({

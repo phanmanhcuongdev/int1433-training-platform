@@ -7,9 +7,24 @@ export class ApiError extends Error {
   }
 }
 
-export async function getJson(path, { signal } = {}) {
+export async function getJson(path, { signal, headers = {} } = {}) {
+  return requestJson(path, { method: 'GET', signal, headers });
+}
+
+export async function postJson(path, body = undefined, { signal, headers = {} } = {}) {
+  return requestJson(path, {
+    method: 'POST',
+    body: body === undefined ? undefined : JSON.stringify(body),
+    headers: { 'content-type': 'application/json', ...headers },
+    signal
+  });
+}
+
+export async function requestJson(path, { method = 'GET', body, signal, headers = {} } = {}) {
   const response = await fetch(path, {
-    headers: { accept: 'application/json' },
+    method,
+    body,
+    headers: { accept: 'application/json', ...headers },
     signal
   });
 

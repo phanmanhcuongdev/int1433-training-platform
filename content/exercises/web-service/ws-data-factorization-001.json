@@ -1,0 +1,52 @@
+{
+  "id": "ws-data-factorization-001",
+  "title": "Web Service DataService — Phân tích thừa số nguyên tố",
+  "summary": "Client SOAP gọi request để nhận số nguyên và submit danh sách thừa số nguyên tố theo thứ tự tăng dần.",
+  "display_order": 100,
+  "status": "REVIEWED",
+  "track": "EXAM",
+  "technology": "SOAP Web Service",
+  "protocol": "SOAP",
+  "transport": "HTTP",
+  "stream_type": "DataService",
+  "difficulty": "HARD",
+  "level": "L5",
+  "source_label": "OBSERVED",
+  "source_claim_ids": ["CLAIM-WS-001", "CLAIM-FAILURE-002"],
+  "source_files": ["docs/research/exam/04_EXAM_PATTERNS.md", "docs/research/exam/05_COMMON_FAILURES.md"],
+  "statement": "Bắt đầu phiên để nhận endpoint SOAP, WSDL URL, token và qCode. Client dùng generated client hoặc SOAP request thủ công để gọi request(token, qCode), nhận n, phân tích n thành thừa số nguyên tố tăng dần và gọi submit(token, qCode, factors). Đây là SOAP Web Service, không thay bằng REST.",
+  "learning_objectives": ["Dùng WSDL endpoint đúng phiên.", "Gọi request/submit theo contract SOAP.", "Serialize array/list số nguyên đúng định dạng."],
+  "prerequisites": ["SOAP/WSDL", "Generated Java client", "Prime factorization"],
+  "server_contract": {
+    "wsdl": "http://<HOST>:<SOAP_PORT>/ws/ws-data-factorization-001/{sessionId}?wsdl",
+    "endpoint": "http://<HOST>:<SOAP_PORT>/ws/ws-data-factorization-001/{sessionId}",
+    "service_name": "DataService",
+    "port_name": "DataServicePort"
+  },
+  "request_format": "request(token, qCode) -> int n",
+  "response_format": "Một số nguyên n.",
+  "processing_requirement": "Trả về danh sách thừa số nguyên tố của n theo thứ tự tăng dần, có lặp.",
+  "submission_format": "submit(token, qCode, int[] factors) -> boolean",
+  "timeout": { "session_ttl_seconds": 600, "io_ms": 5000 },
+  "constraints": ["2 <= n <= 2000000000", "SOAP endpoint theo phiên.", "Không dùng REST endpoint để nộp bài."],
+  "examples": [
+    { "payload": "84", "submission": "[2,2,3,7]" },
+    { "payload": "97", "submission": "[97]" },
+    { "payload": "360", "submission": "[2,2,2,3,3,5]" }
+  ],
+  "common_failures": ["wrong_wsdl_endpoint", "wrong_qcode", "wrong_method_name", "wrong_array_order", "soap_namespace_mismatch"],
+  "hints": ["Sinh client từ WSDL của phiên hiện tại.", "Giữ nguyên token/qCode khi submit.", "Danh sách factors phải tăng dần và có lặp."],
+  "starter_asset_path": "assets/starters/ws-data-factorization-001",
+  "evaluation_mode": "NETWORK_CHALLENGE",
+  "grader_key": "net.soap.data_factorization.v1",
+  "verdict_definitions": {
+    "AC": "SOAP request/submit đúng và factors đúng.",
+    "WA": "SOAP contract đúng nhưng factors sai.",
+    "PROTOCOL_ERROR": "Sai endpoint, method, namespace, token hoặc qCode.",
+    "TLE": "Không submit trước khi phiên hết hạn."
+  },
+  "judge": { "network_session_ttl_seconds": 600, "max_attempts": null },
+  "tags": ["soap", "web-service", "data-service", "factorization", "network-challenge"],
+  "estimated_time": "1h",
+  "evidence_disclaimer": "Bài giữ SOAP cho Exam Track; endpoint là mock service của platform, không phải service thi thật."
+}

@@ -1,9 +1,9 @@
 {
   "id": "udp-string-request-id-001",
-  "title": "UDP String RequestId Echo",
-  "summary": "Luyện giữ nguyên requestId trong contract UDP string.",
-  "display_order": 30,
-  "status": "DRAFT",
+  "title": "UDP String — Giữ nguyên requestId",
+  "summary": "Client UDP nhận requestId;payload, xử lý payload và gửi lại requestId;answer với đúng datagram length.",
+  "display_order": 70,
+  "status": "REVIEWED",
   "track": "EXAM",
   "technology": "UDP",
   "protocol": "UDP",
@@ -12,46 +12,41 @@
   "difficulty": "EASY",
   "level": "L2",
   "source_label": "OBSERVED",
-  "source_claim_ids": [
-    "CLAIM-UDP-001",
-    "CLAIM-FAILURE-002"
-  ],
-  "source_files": [
-    "docs/research/exam/04_EXAM_PATTERNS.md",
-    "docs/research/exam/05_COMMON_FAILURES.md"
-  ],
-  "statement": "Viết Java UDP client cho mock server tại <HOST>:<PORT>. Server trả về requestId và payload dạng chuỗi. Client gửi kết quả đã xử lý kèm đúng requestId. Đây là bài luyện tập, không phải đề thi chính thức của PTIT.",
+  "source_claim_ids": ["CLAIM-UDP-001", "CLAIM-FAILURE-002"],
+  "source_files": ["docs/research/exam/04_EXAM_PATTERNS.md", "docs/research/exam/05_COMMON_FAILURES.md"],
+  "statement": "Bắt đầu phiên để nhận host, port, token và qCode. Client gửi datagram token;qCode. Server trả về requestId;payload. Client đảo ngược payload theo ký tự Unicode và gửi requestId;answer. Server chỉ chấm datagram thật nhận được, không chấm console output.",
+  "learning_objectives": ["Giữ nguyên requestId theo session.", "Dùng packet.getLength() khi chuyển byte sang string.", "Phân biệt stale requestId và sai kết quả."],
+  "prerequisites": ["DatagramSocket", "DatagramPacket", "UTF-8"],
   "server_contract": {
-    "host": "<HOST>",
-    "port": "<PORT>",
-    "request": ";studentCode;qCode",
-    "response": "requestId;data",
-    "submission": "requestId;processedData"
+    "request": "token;qCode",
+    "response": "requestId;payload",
+    "submission": "requestId;reversedPayload",
+    "stateless_datagram": true
   },
-  "request_format": ";{studentCode};{qCode}",
-  "response_format": "{requestId};{data}",
-  "learning_objectives": [
-    "Giữ nguyên requestId qua cặp UDP response/submission.",
-    "Dùng datagram packet length thay vì toàn bộ receive buffer."
+  "request_format": "{token};{qCode}",
+  "response_format": "{requestId};{payload}",
+  "processing_requirement": "Đảo ngược payload và giữ nguyên requestId.",
+  "submission_format": "{requestId};{reversedPayload}",
+  "timeout": { "session_ttl_seconds": 600, "io_ms": 5000 },
+  "constraints": ["requestId thay đổi theo phiên.", "Không dùng toàn bộ receive buffer.", "Sai delimiter là Protocol Error."],
+  "examples": [
+    { "payload": "abc", "submission": "requestId;cba" },
+    { "payload": "lập trình", "submission": "requestId;hnìrt pậl" },
+    { "payload": "A  B", "submission": "requestId;B  A" }
   ],
-  "processing_requirement": "Đảo ngược payload string và giữ nguyên requestId nhận được từ server response.",
-  "submission_format": "{requestId};{reversedData}",
-  "timeout": {
-    "read_ms": 5000
+  "common_failures": ["missing_request_id", "stale_request_id", "wrong_delimiter", "using_full_buffer_instead_of_packet_length", "wrong_session_result"],
+  "hints": ["Tạo String từ packet.getData(), packet.getOffset(), packet.getLength().", "Không tự sinh requestId.", "Gửi submission về đúng address/port của packet response."],
+  "starter_asset_path": "assets/starters/udp-string-request-id-001",
+  "evaluation_mode": "NETWORK_CHALLENGE",
+  "grader_key": "net.udp.string_request_id.v1",
+  "verdict_definitions": {
+    "AC": "requestId và answer đúng.",
+    "WA": "requestId đúng nhưng answer sai.",
+    "PROTOCOL_ERROR": "Thiếu/sai requestId, sai delimiter hoặc dùng requestId phiên khác.",
+    "TLE": "Không nhận được submission trước timeout."
   },
-  "common_failures": [
-    "missing_request_id",
-    "using_full_buffer_instead_of_packet_length",
-    "wrong_udp_request_prefix",
-    "stale_port_assumption"
-  ],
-  "tags": [
-    "udp",
-    "request-id",
-    "string"
-  ],
-  "estimated_time": "25m",
-  "hints": [
-    "Khi chuyển byte sang text, dùng độ dài packet thực tế thay vì toàn bộ receive buffer."
-  ]
+  "judge": { "network_session_ttl_seconds": 600, "max_attempts": null },
+  "tags": ["udp", "string", "request-id", "packet-length", "network-challenge"],
+  "estimated_time": "35m",
+  "evidence_disclaimer": "Pattern UDP requestId dựa trên research; requestId/host/port trong platform không đại diện cho kỳ thi hiện hành."
 }

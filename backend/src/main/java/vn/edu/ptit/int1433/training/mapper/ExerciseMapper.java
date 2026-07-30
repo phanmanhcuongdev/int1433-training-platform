@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.List;
 import org.springframework.stereotype.Component;
 import vn.edu.ptit.int1433.training.dto.ExerciseDetailResponse;
+import vn.edu.ptit.int1433.training.dto.ExerciseEvaluationResponse;
 import vn.edu.ptit.int1433.training.dto.ExerciseSourceResponse;
 import vn.edu.ptit.int1433.training.dto.ExerciseSummaryResponse;
 import vn.edu.ptit.int1433.training.entity.Exercise;
@@ -29,6 +30,7 @@ public class ExerciseMapper {
             exercise.getDifficulty().name(),
             exercise.getLevel().name(),
             exercise.getSourceLabel().name(),
+            exercise.getEvaluationMode(),
             exercise.getEstimatedTimeMinutes(),
             exercise.getDisplayOrder(),
             sortedStrings(exercise.getTags())
@@ -49,6 +51,7 @@ public class ExerciseMapper {
             exercise.getDifficulty().name(),
             exercise.getLevel().name(),
             exercise.getSourceLabel().name(),
+            exercise.getEvaluationMode(),
             exercise.getStatement(),
             exercise.getProcessingRequirement(),
             exercise.getRequestFormat(),
@@ -58,6 +61,16 @@ public class ExerciseMapper {
             exercise.getDisplayOrder(),
             exercise.getServerContract(),
             exercise.getTimeoutConfig(),
+            exercise.getLanguagePolicy(),
+            exercise.getTimeLimitMs(),
+            exercise.getMemoryLimitMb(),
+            exercise.getNetworkSessionTtlSeconds(),
+            exercise.getMaxAttempts(),
+            exercise.getStarterAssetPath(),
+            exercise.getVerdictPolicy(),
+            exercise.getConstraints(),
+            exercise.getExamples(),
+            exercise.getEvidenceDisclaimer(),
             sortedStrings(exercise.getTags()),
             exercise.getCommonFailures().stream()
                 .sorted(Comparator.comparing(ExerciseCommonFailure::getDisplayOrder))
@@ -80,6 +93,40 @@ public class ExerciseMapper {
                 .map(this::toSource)
                 .toList()
         );
+    }
+
+    public ExerciseEvaluationResponse toEvaluation(Exercise exercise) {
+        return new ExerciseEvaluationResponse(
+            exercise.getId(),
+            exercise.getEvaluationMode(),
+            exercise.getLanguagePolicy() == null ? List.of() : exercise.getLanguagePolicy(),
+            exercise.getTimeLimitMs(),
+            exercise.getMemoryLimitMb(),
+            exercise.getNetworkSessionTtlSeconds(),
+            exercise.getMaxAttempts(),
+            exercise.getStarterAssetPath() != null,
+            exercise.getStarterAssetPath(),
+            exercise.getVerdictPolicy(),
+            instructionsFor(exercise)
+        );
+    }
+
+    private List<String> instructionsFor(Exercise exercise) {
+        if ("JAVA_CODE".equals(exercise.getEvaluationMode())) {
+            return List.of(
+                "Nộp một file Java chứa public class Main.",
+                "Code được compile và chạy trong runner cô lập.",
+                "Không dùng thư viện ngoài JDK 21."
+            );
+        }
+        if ("NETWORK_CHALLENGE".equals(exercise.getEvaluationMode())) {
+            return List.of(
+                "Bắt đầu phiên để nhận token, qCode và thông tin kết nối.",
+                "Chạy Java client cục bộ để kết nối challenge service của platform.",
+                "Không dùng IP/port cũ từ tài liệu thi làm cấu hình cố định."
+            );
+        }
+        return List.of("Gửi đáp án qua form practice của platform.");
     }
 
     private ExerciseSourceResponse toSource(ExerciseSource source) {

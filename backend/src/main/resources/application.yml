@@ -24,3 +24,25 @@ management:
     health:
       probes:
         enabled: true
+
+int1433:
+  runner:
+    image: ${JAVA_RUNNER_IMAGE:int1433-java-runner:0.4.0}
+    compile-timeout-ms: ${JAVA_COMPILE_TIMEOUT_MS:10000}
+    run-timeout-ms: ${JAVA_RUN_TIMEOUT_MS:3000}
+    memory-mb: ${JAVA_RUNNER_MEMORY_MB:256}
+    pids-limit: ${JAVA_RUNNER_PIDS_LIMIT:32}
+    cpus: ${JAVA_RUNNER_CPUS:1.0}
+    output-limit-bytes: ${JAVA_RUNNER_OUTPUT_LIMIT_BYTES:65536}
+  challenge:
+    host: ${CHALLENGE_HOST:127.0.0.1}
+    public-host: ${CHALLENGE_PUBLIC_HOST:${CHALLENGE_HOST:127.0.0.1}}
+    bind-address: ${CHALLENGE_BIND_ADDRESS:127.0.0.1}
+    tcp-port-min: ${CHALLENGE_TCP_PORT_MIN:19000}
+    tcp-port-max: ${CHALLENGE_TCP_PORT_MAX:19020}
+    udp-port-min: ${CHALLENGE_UDP_PORT_MIN:19100}
+    udp-port-max: ${CHALLENGE_UDP_PORT_MAX:19120}
+    rmi-registry-port: ${RMI_REGISTRY_PORT:19200}
+    soap-port: ${SOAP_PORT:8080}
+    max-active-sessions-per-participant: ${MAX_ACTIVE_SESSIONS_PER_PARTICIPANT:3}
+    starter-asset-root: ${STARTER_ASSET_ROOT:../assets/starters}

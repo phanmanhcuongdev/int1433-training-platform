@@ -1,0 +1,52 @@
+{
+  "id": "rmi-data-pythagorean-001",
+  "title": "RMI DataService — Bộ ba Pythagore",
+  "summary": "Client Java RMI lookup DataService, request dữ liệu phiên và submit bộ ba Pythagore đã chuẩn hóa.",
+  "display_order": 90,
+  "status": "REVIEWED",
+  "track": "EXAM",
+  "technology": "RMI",
+  "protocol": "RMI",
+  "transport": "Java RMI Registry",
+  "stream_type": "DataService",
+  "difficulty": "HARD",
+  "level": "L5",
+  "source_label": "OBSERVED",
+  "source_claim_ids": ["CLAIM-RMI-001", "CLAIM-FAILURE-002"],
+  "source_files": ["docs/research/exam/04_EXAM_PATTERNS.md", "docs/research/exam/05_COMMON_FAILURES.md"],
+  "statement": "Bắt đầu phiên để nhận registry host, registry port, service name, token và qCode. Client Java lookup DataService, gọi request(token, qCode) để nhận mảng số nguyên, tìm mọi bộ ba Pythagore a,b,c trong đó a*a + b*b = c*c, a < b < c, rồi submit danh sách bộ ba đã sort.",
+  "learning_objectives": ["Lookup RMI registry đúng service name.", "Dùng interface artifact cố định.", "Gắn request/submit với token và qCode của phiên."],
+  "prerequisites": ["Java RMI", "Remote interface", "List/array processing"],
+  "server_contract": {
+    "registry_host": "<HOST>",
+    "registry_port": "<RMI_REGISTRY_PORT>",
+    "service_name": "DataService_{sessionId}",
+    "interface": "vn.edu.ptit.int1433.training.contract.rmi.DataService"
+  },
+  "request_format": "int[] request(String token, String qCode) throws RemoteException",
+  "response_format": "int[] values",
+  "processing_requirement": "Tìm mọi bộ ba Pythagore từ values, sort từng bộ ba tăng dần và sort danh sách theo a,b,c.",
+  "submission_format": "boolean submit(String token, String qCode, List<int[]> triples) throws RemoteException",
+  "timeout": { "session_ttl_seconds": 600, "io_ms": 5000 },
+  "constraints": ["RMI Java-only.", "Sai service name là Protocol Error.", "Không gửi bộ ba chứa số ngoài payload."],
+  "examples": [
+    { "payload": "[3,4,5,6]", "submission": "[[3,4,5]]" },
+    { "payload": "[5,12,13,8,15,17]", "submission": "[[5,12,13],[8,15,17]]" },
+    { "payload": "[1,2,3]", "submission": "[]" }
+  ],
+  "common_failures": ["wrong_rmi_service", "wrong_qcode", "wrong_interface_package", "unsorted_submission", "stale_session_token"],
+  "hints": ["Dùng interface trong starter.", "Service name chứa sessionId.", "Submit cùng token/qCode đã request."],
+  "starter_asset_path": "assets/starters/rmi-data-pythagorean-001",
+  "evaluation_mode": "NETWORK_CHALLENGE",
+  "grader_key": "net.rmi.data_pythagorean.v1",
+  "verdict_definitions": {
+    "AC": "Request và submit đúng qua RMI.",
+    "WA": "RMI contract đúng nhưng danh sách bộ ba sai.",
+    "PROTOCOL_ERROR": "Sai service, interface, token hoặc qCode.",
+    "TLE": "Không submit trước khi phiên hết hạn."
+  },
+  "judge": { "network_session_ttl_seconds": 600, "max_attempts": null },
+  "tags": ["rmi", "data-service", "pythagorean", "java-only", "network-challenge"],
+  "estimated_time": "1h",
+  "evidence_disclaimer": "RMI là Java-specific trong Exam Track; service name/port là của platform luyện tập."
+}

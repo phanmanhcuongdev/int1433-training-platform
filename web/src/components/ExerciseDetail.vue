@@ -28,6 +28,9 @@ defineProps({
         <span class="pill">{{ exercise.status || 'DRAFT' }}</span>
         <SourceLabelBadge :label="exercise.sourceLabel" />
       </div>
+      <RouterLink class="practice-link" :to="{ name: 'exercise-practice', params: { id: exercise.id } }">
+        Luyện tập
+      </RouterLink>
     </header>
 
     <section>
@@ -138,6 +141,20 @@ defineProps({
   background: #ffffff;
   color: #203040;
   font-weight: 750;
+  text-decoration: none;
+}
+
+.practice-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  margin-top: 16px;
+  padding: 0 16px;
+  border-radius: 6px;
+  background: #1f5f8b;
+  color: #ffffff;
+  font-weight: 800;
   text-decoration: none;
 }
 

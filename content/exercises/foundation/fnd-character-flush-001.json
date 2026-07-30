@@ -1,38 +1,83 @@
 {
   "id": "fnd-character-flush-001",
-  "title": "Character Stream Flush Drill",
-  "summary": "Luyện hành vi Reader/Writer trong Java trước khi chuyển sang character stream qua socket.",
+  "title": "Character Stream và flush()",
+  "summary": "Nộp một lớp Java đọc một dòng UTF-8 từ stdin, chuẩn hóa khoảng trắng và chữ hoa/thường, ghi đúng một dòng ra stdout rồi flush.",
   "display_order": 10,
-  "status": "DRAFT",
+  "status": "REVIEWED",
   "track": "EXAM",
   "technology": "Java I/O",
+  "protocol": null,
+  "transport": "stdin/stdout",
+  "stream_type": "Character Stream",
   "difficulty": "EASY",
   "level": "L0",
   "source_label": "EXTENDED",
-  "statement": "Luyện một contract character stream theo dòng ở môi trường cục bộ. Bài này là prerequisite cho TCP character stream và không kết nối tới server thi thật.",
-  "learning_objectives": [
-    "Hiểu vì sao output character stream có buffer cần được flush.",
-    "Nhận diện tình huống blocking trong input theo dòng."
+  "source_claim_ids": ["CLAIM-FAILURE-002", "CLAIM-PLATFORM-FOUNDATION-001"],
+  "source_files": [
+    "docs/research/exam/05_COMMON_FAILURES.md",
+    "docs/research/platform/01_EXERCISE_TAXONOMY.md"
   ],
-  "processing_requirement": "Đọc một dòng đầu vào, chuyển nội dung sang chữ hoa, ghi lại dòng đã xử lý, sau đó gọi flush() cho writer.",
+  "statement": "Viết chương trình Java một file. Chương trình đọc tối đa một dòng UTF-8 từ stdin, bỏ khoảng trắng thừa ở hai đầu, gom nhiều khoảng trắng liên tiếp thành một dấu cách, chuyển toàn bộ chữ cái sang chữ hoa theo Unicode mặc định, in đúng một dòng kết quả ra stdout và gọi flush(). Bài này luyện lỗi buffer/flush trước khi làm TCP character stream. Đây không phải đề thi chính thức của PTIT.",
+  "learning_objectives": [
+    "Dùng BufferedReader và BufferedWriter đúng vai trò.",
+    "Hiểu vì sao writer có buffer cần flush trước khi chương trình kết thúc hoặc trước khi chờ phản hồi.",
+    "Phân biệt stdout được grader đọc với log debug không cần thiết."
+  ],
+  "prerequisites": ["Java cơ bản", "BufferedReader", "BufferedWriter", "UTF-8 text"],
+  "server_contract": {
+    "mode": "JAVA_CODE",
+    "entrypoint": "public class Main",
+    "input": "stdin UTF-8",
+    "output": "stdout UTF-8 one line"
+  },
+  "request_format": "Một dòng UTF-8 trên stdin. Có thể không có ký tự newline cuối file.",
+  "response_format": "Không có server response.",
+  "processing_requirement": "trim, gom khoảng trắng bằng một dấu cách, chuyển sang chữ hoa và in một dòng.",
+  "submission_format": "Một file Java chứa public class Main.",
+  "timeout": { "compile_ms": 10000, "run_ms": 3000 },
+  "constraints": [
+    "Không đọc quá một dòng đầu tiên.",
+    "Không yêu cầu package.",
+    "Không dùng thư viện ngoài JDK 21.",
+    "Output stderr không được tính là đáp án."
+  ],
+  "examples": [
+    { "input": "hello", "output": "HELLO" },
+    { "input": "  Lap   trinh  mang  ", "output": "LAP TRINH MANG" },
+    { "input": "xin Chào mạng", "output": "XIN CHÀO MẠNG" }
+  ],
   "common_failures": [
     "missing_flush",
     "missing_newline",
-    "readline_blocking"
-  ],
-  "tags": [
-    "foundation",
-    "character-stream",
-    "flush"
-  ],
-  "estimated_time": "15m",
-  "prerequisites": [
-    "Java Reader/Writer",
-    "BufferedReader",
-    "BufferedWriter"
+    "readline_blocking",
+    "wrong_encoding",
+    "extra_debug_stdout"
   ],
   "hints": [
-    "BufferedWriter có thể giữ dữ liệu trong bộ đệm cho tới khi flush() được gọi."
+    "Dùng readLine() một lần là đủ cho bài này.",
+    "Gom khoảng trắng sau khi trim để tránh sinh thêm khoảng trắng ở đầu hoặc cuối.",
+    "Gọi writer.flush() sau khi ghi newline."
   ],
-  "explanation": "Bài pilot này chuẩn bị cho lỗi TCP character stream thường gặp nhưng không tự nhận là đề thi chính thức."
+  "starter_code": {
+    "language": "JAVA",
+    "source": "import java.io.*;\n\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        BufferedReader in = new BufferedReader(new InputStreamReader(System.in, java.nio.charset.StandardCharsets.UTF_8));\n        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(System.out, java.nio.charset.StandardCharsets.UTF_8));\n        String line = in.readLine();\n        // Xử lý line và ghi kết quả tại đây.\n        out.flush();\n    }\n}\n"
+  },
+  "evaluation_mode": "JAVA_CODE",
+  "grader_key": "java.fnd.character_flush.v1",
+  "verdict_definitions": {
+    "AC": "Mọi hidden test đúng.",
+    "WA": "Chương trình chạy xong nhưng output sai.",
+    "CE": "Không biên dịch được bằng javac 21.",
+    "RE": "Runtime exception hoặc exit code khác 0.",
+    "TLE": "Quá thời gian chạy."
+  },
+  "judge": {
+    "language_policy": ["JAVA"],
+    "time_limit_ms": 3000,
+    "memory_limit_mb": 256,
+    "runner_required": true
+  },
+  "tags": ["foundation", "character-stream", "flush", "java-code"],
+  "estimated_time": "20m",
+  "evidence_disclaimer": "Bài mở rộng từ lỗi flush/blocking thường gặp trong research; không phải đề thi chính thức."
 }
