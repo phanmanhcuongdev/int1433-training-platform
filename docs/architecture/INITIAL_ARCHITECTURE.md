@@ -2,7 +2,7 @@
 
 ## Scope
 
-Version `0.1.0` is a Phase 0 bootstrap for a content-only platform.
+Version `0.2.0` is a Phase 1A start for a content-only platform.
 
 No backend, database, authentication, local judge, online judge, Docker, or infrastructure is included.
 
@@ -15,15 +15,20 @@ content/exercises/*.json
 scripts/validate-content.mjs
         |
         v
-web/ minimal static Vue app
+scripts/build-content-index.mjs
+        |
+        v
+web/public/generated/exercises.json
+        |
+        v
+Vue frontend fetches generated catalog
 ```
 
 ## Near-term Direction
 
-1. Validate content JSON.
-2. Render pilot exercises in the static frontend.
-3. Review schema and pilot content.
-4. Expand to at most 12 pilot exercises.
+1. Review schema and pilot content in the rendered UI.
+2. Expand to at most 12 pilot exercises.
+3. Keep local judge/backend out of scope until content review is complete.
 
 ## Non-goals
 
@@ -31,4 +36,3 @@ web/ minimal static Vue app
 - No untrusted code execution.
 - No real exam server integration.
 - No database or user accounts.
-

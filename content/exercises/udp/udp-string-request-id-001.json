@@ -1,6 +1,8 @@
 {
   "id": "udp-string-request-id-001",
   "title": "UDP String RequestId Echo",
+  "summary": "Practice preserving requestId in a mock UDP string contract.",
+  "display_order": 30,
   "status": "DRAFT",
   "track": "EXAM",
   "technology": "UDP",
@@ -18,7 +20,7 @@
     "docs/research/exam/04_EXAM_PATTERNS.md",
     "docs/research/exam/05_COMMON_FAILURES.md"
   ],
-  "statement": "Build a Java UDP client for a mock server at <HOST>:<PORT>. The server returns a requestId and a string payload. Submit the processed answer with the same requestId.",
+  "statement": "Build a Java UDP client for a mock server at <HOST>:<PORT>. The server returns a requestId and a string payload. Submit the processed answer with the same requestId. This is a training exercise, not an official PTIT exam task.",
   "server_contract": {
     "host": "<HOST>",
     "port": "<PORT>",
@@ -28,6 +30,10 @@
   },
   "request_format": ";{studentCode};{qCode}",
   "response_format": "{requestId};{data}",
+  "learning_objectives": [
+    "Preserve requestId exactly across a UDP response/submission pair.",
+    "Use datagram packet length instead of the full receive buffer."
+  ],
   "processing_requirement": "Reverse the payload string while preserving the exact requestId from the server response.",
   "submission_format": "{requestId};{reversedData}",
   "timeout": {
@@ -49,4 +55,3 @@
     "Use the datagram packet length when converting bytes to text."
   ]
 }
-

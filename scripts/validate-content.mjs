@@ -1,4 +1,4 @@
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -21,11 +21,16 @@ const requiredFields = [
 ];
 
 const enums = {
+  status: ['DRAFT', 'REVIEWED', 'PUBLISHED', 'DEPRECATED'],
   source_label: ['OBSERVED', 'STRONG_PATTERN', 'EXTENDED', 'CHALLENGE'],
   track: ['EXAM', 'EXTENDED_NETWORKING', 'BACKEND_DISTRIBUTED'],
   difficulty: ['EASY', 'MEDIUM', 'HARD'],
   level: ['L0', 'L1', 'L2', 'L3', 'L4', 'L5', 'L6']
 };
+
+const realIpPattern = /203\.162\.10\.109|172\.188\.19\.218/;
+const idPattern = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
+const estimatedTimePattern = /^(?:[1-9]\d*h(?:[1-5]?\dm)?|[1-9]\d*m)$/;
 
 async function listJsonFiles(dir) {
   const entries = await readdir(dir, { withFileTypes: true });
@@ -43,7 +48,27 @@ async function listJsonFiles(dir) {
   return files;
 }
 
-function validateExercise(file, data, seenIds) {
+function hasDuplicates(items) {
+  return new Set(items).size !== items.length;
+}
+
+function isRelativeRepoPath(value) {
+  return typeof value === 'string' &&
+    value.length > 0 &&
+    !path.isAbsolute(value) &&
+    !value.split(/[\\/]/).includes('..');
+}
+
+async function fileExists(relPath) {
+  try {
+    const entry = await stat(path.join(root, relPath));
+    return entry.isFile();
+  } catch {
+    return false;
+  }
+}
+
+async function validateExercise(file, data, seenIds) {
   const errors = [];
   const rel = path.relative(root, file);
 
@@ -60,6 +85,10 @@ function validateExercise(file, data, seenIds) {
   }
 
   if (typeof data.id === 'string') {
+    if (!idPattern.test(data.id)) {
+      errors.push(`${rel}: id must be lowercase kebab-case using letters, numbers, and hyphens`);
+    }
+
     if (seenIds.has(data.id)) {
       errors.push(`${rel}: duplicate id "${data.id}" also used in ${seenIds.get(data.id)}`);
     } else {
@@ -73,14 +102,38 @@ function validateExercise(file, data, seenIds) {
     }
   }
 
+  if (typeof data.estimated_time === 'string' && !estimatedTimePattern.test(data.estimated_time)) {
+    errors.push(`${rel}: estimated_time must look like 15m, 30m, 1h, or 1h30m`);
+  }
+
+  for (const uniqueArrayField of ['tags', 'source_claim_ids']) {
+    if (Array.isArray(data[uniqueArrayField]) && hasDuplicates(data[uniqueArrayField])) {
+      errors.push(`${rel}: ${uniqueArrayField} must not contain duplicates`);
+    }
+  }
+
   if (data.track === 'EXAM' && ['OBSERVED', 'STRONG_PATTERN'].includes(data.source_label)) {
     if (!Array.isArray(data.source_claim_ids) || data.source_claim_ids.length === 0) {
       errors.push(`${rel}: observed Exam Track exercises must include source_claim_ids`);
     }
+
+    if (!Array.isArray(data.source_files) || data.source_files.length === 0) {
+      errors.push(`${rel}: observed Exam Track exercises must include source_files`);
+    }
+  }
+
+  if (Array.isArray(data.source_files)) {
+    for (const sourceFile of data.source_files) {
+      if (!isRelativeRepoPath(sourceFile)) {
+        errors.push(`${rel}: source_files entry "${sourceFile}" must be a relative repo path`);
+      } else if (!await fileExists(sourceFile)) {
+        errors.push(`${rel}: source_files entry "${sourceFile}" does not exist`);
+      }
+    }
   }
 
   const serialized = JSON.stringify(data);
-  if (/203\.162\.10\.109|172\.188\.19\.218/.test(serialized)) {
+  if (realIpPattern.test(serialized)) {
     errors.push(`${rel}: do not hard-code old real exam IPs; use <HOST> and <PORT>`);
   }
 
@@ -100,7 +153,7 @@ for (const file of files) {
     continue;
   }
 
-  errors.push(...validateExercise(file, data, seenIds));
+  errors.push(...await validateExercise(file, data, seenIds));
 }
 
 if (errors.length > 0) {
@@ -112,4 +165,3 @@ if (errors.length > 0) {
 }
 
 console.log(`Content validation passed for ${files.length} exercise file(s).`);
-

@@ -1,16 +1,16 @@
 {
   "name": "int1433-training-platform",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Unofficial Java-first training platform for INT1433.",
   "workspaces": [
     "web"
   ],
   "scripts": {
-    "dev": "npm --workspace web run dev",
-    "build": "npm --workspace web run build",
+    "prepare-content": "npm run validate && node scripts/build-content-index.mjs",
+    "dev": "npm run prepare-content && npm --workspace web run dev",
+    "build": "npm run prepare-content && npm --workspace web run build",
     "validate": "node scripts/validate-content.mjs",
-    "check": "npm run validate && npm run build"
+    "check": "npm run prepare-content && node scripts/test-content-build.mjs && npm run build"
   }
 }
-

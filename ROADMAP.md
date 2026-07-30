@@ -2,6 +2,8 @@
 
 ## Phase 0 - Bootstrap
 
+Status: complete in `0.1.0`.
+
 - Initialize repository.
 - Copy research snapshots.
 - Define initial JSON content schema.
@@ -11,7 +13,9 @@
 
 ## Phase 1A - Static Site + 12 Exercises
 
-- Render pilot exercises in the UI.
+Status: started in `0.2.0`.
+
+- Render pilot exercises in the UI. Complete for the initial 3 draft exercises.
 - Review schema and pilot content.
 - Expand to at most 12 reviewed exercises.
 - Keep judge/backend out of scope.
@@ -30,4 +34,3 @@
 
 - Only after security review.
 - Never run untrusted submissions directly on the host.
-

@@ -21,6 +21,8 @@
   "properties": {
     "id": { "type": "string", "minLength": 1 },
     "title": { "type": "string", "minLength": 1 },
+    "summary": { "type": "string" },
+    "display_order": { "type": "number" },
     "status": { "type": "string", "enum": ["DRAFT", "REVIEWED", "PUBLISHED", "DEPRECATED"] },
     "track": { "type": "string", "enum": ["EXAM", "EXTENDED_NETWORKING", "BACKEND_DISTRIBUTED"] },
     "technology": { "type": "string", "minLength": 1 },
@@ -32,6 +34,7 @@
     "common_failures": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
     "tags": { "type": "array", "items": { "type": "string" }, "minItems": 1 },
     "estimated_time": { "type": "string", "minLength": 1 },
+    "learning_objectives": { "type": "array", "items": { "type": "string" } },
     "protocol": { "type": "string" },
     "transport": { "type": "string" },
     "stream_type": { "type": "string" },
@@ -52,4 +55,3 @@
     "judge": { "type": "object" }
   }
 }
-

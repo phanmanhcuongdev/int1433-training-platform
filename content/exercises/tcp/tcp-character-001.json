@@ -1,6 +1,8 @@
 {
   "id": "tcp-character-001",
   "title": "TCP Character Stream Word Normalization",
+  "summary": "Practice a mock TCP character-stream request, response, processing, and submission contract.",
+  "display_order": 20,
   "status": "DRAFT",
   "track": "EXAM",
   "technology": "TCP",
@@ -18,7 +20,7 @@
     "docs/research/exam/04_EXAM_PATTERNS.md",
     "docs/research/exam/05_COMMON_FAILURES.md"
   ],
-  "statement": "Build a Java TCP client for a mock server at <HOST>:<PORT>. The client sends the student code and question code, receives one text line, normalizes words, and submits one text line back to the mock server.",
+  "statement": "Build a Java TCP client for a mock server at <HOST>:<PORT>. The client sends the student code and question code, receives one text line, normalizes words, and submits one text line back to the mock server. This is a training exercise, not an official PTIT exam task.",
   "server_contract": {
     "host": "<HOST>",
     "port": "<PORT>",
@@ -28,6 +30,10 @@
   },
   "request_format": "{studentCode};{qCode}",
   "response_format": "{rawText}",
+  "learning_objectives": [
+    "Follow a line-based TCP request/response/submission contract.",
+    "Separate socket submission from console output."
+  ],
   "processing_requirement": "Capitalize the first letter of each word and lowercase the remaining letters.",
   "submission_format": "{normalizedText}",
   "timeout": {
@@ -49,4 +55,3 @@
     "Submit data through the socket. Console output is not the submission."
   ]
 }
-
