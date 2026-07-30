@@ -1,5 +1,7 @@
 <script setup>
+import { RouterLink } from 'vue-router';
 import SourceLabelBadge from './SourceLabelBadge.vue';
+import { failureLabel, minutesLabel } from '../utils/display';
 
 defineProps({
   exercise: {
@@ -7,13 +9,11 @@ defineProps({
     required: true
   }
 });
-
-defineEmits(['back']);
 </script>
 
 <template>
   <article class="detail panel">
-    <button class="back" type="button" @click="$emit('back')">Quay lai danh sach</button>
+    <RouterLink class="back" to="/exercises">Quay lại danh sách</RouterLink>
 
     <header>
       <p class="mono id">{{ exercise.id }}</p>
@@ -24,40 +24,40 @@ defineEmits(['back']);
         <span class="pill">{{ exercise.technology }}</span>
         <span class="pill">{{ exercise.level }}</span>
         <span class="pill">{{ exercise.difficulty }}</span>
-        <span class="pill">{{ exercise.estimated_time }}</span>
+        <span class="pill">{{ minutesLabel(exercise.estimatedTimeMinutes) }}</span>
         <span class="pill">{{ exercise.status || 'DRAFT' }}</span>
-        <SourceLabelBadge :label="exercise.source_label" />
+        <SourceLabelBadge :label="exercise.sourceLabel" />
       </div>
     </header>
 
     <section>
-      <h3>De bai</h3>
+      <h3>Đề bài</h3>
       <p>{{ exercise.statement }}</p>
     </section>
 
-    <section v-if="exercise.learning_objectives?.length">
-      <h3>Learning objective</h3>
+    <section v-if="exercise.learningObjectives?.length">
+      <h3>Mục tiêu học tập</h3>
       <ul>
-        <li v-for="item in exercise.learning_objectives" :key="item">{{ item }}</li>
+        <li v-for="item in exercise.learningObjectives" :key="item">{{ item }}</li>
       </ul>
     </section>
 
     <section>
-      <h3>Processing requirement</h3>
-      <p>{{ exercise.processing_requirement }}</p>
+      <h3>Yêu cầu xử lý</h3>
+      <p>{{ exercise.processingRequirement }}</p>
     </section>
 
     <section v-if="exercise.prerequisites?.length">
-      <h3>Prerequisites</h3>
+      <h3>Kiến thức cần có</h3>
       <ul>
         <li v-for="item in exercise.prerequisites" :key="item">{{ item }}</li>
       </ul>
     </section>
 
-    <section v-if="exercise.server_contract">
+    <section v-if="exercise.serverContract">
       <h3>Server contract</h3>
       <dl class="contract">
-        <template v-for="(value, key) in exercise.server_contract" :key="key">
+        <template v-for="(value, key) in exercise.serverContract" :key="key">
           <dt>{{ key }}</dt>
           <dd><code>{{ value }}</code></dd>
         </template>
@@ -67,57 +67,56 @@ defineEmits(['back']);
     <section class="formats">
       <h3>Contract format</h3>
       <dl>
-        <template v-if="exercise.request_format">
+        <template v-if="exercise.requestFormat">
           <dt>request</dt>
-          <dd><code>{{ exercise.request_format }}</code></dd>
+          <dd><code>{{ exercise.requestFormat }}</code></dd>
         </template>
-        <template v-if="exercise.response_format">
+        <template v-if="exercise.responseFormat">
           <dt>response</dt>
-          <dd><code>{{ exercise.response_format }}</code></dd>
+          <dd><code>{{ exercise.responseFormat }}</code></dd>
         </template>
-        <template v-if="exercise.submission_format">
+        <template v-if="exercise.submissionFormat">
           <dt>submission</dt>
-          <dd><code>{{ exercise.submission_format }}</code></dd>
+          <dd><code>{{ exercise.submissionFormat }}</code></dd>
         </template>
       </dl>
     </section>
 
-    <section v-if="exercise.timeout">
+    <section v-if="exercise.timeoutConfig">
       <h3>Timeout</h3>
-      <pre>{{ JSON.stringify(exercise.timeout, null, 2) }}</pre>
+      <pre>{{ JSON.stringify(exercise.timeoutConfig, null, 2) }}</pre>
     </section>
 
     <section>
-      <h3>Common failures</h3>
+      <h3>Lỗi thường gặp</h3>
       <ul>
-        <li v-for="failure in exercise.common_failures" :key="failure">
-          <code>{{ failure }}</code>
+        <li v-for="failure in exercise.commonFailures" :key="failure">
+          {{ failureLabel(failure) }} <code>{{ failure }}</code>
         </li>
       </ul>
     </section>
 
     <section v-if="exercise.hints?.length">
-      <h3>Hints</h3>
+      <h3>Gợi ý</h3>
       <ul>
         <li v-for="hint in exercise.hints" :key="hint">{{ hint }}</li>
       </ul>
     </section>
 
     <section>
-      <h3>Traceability</h3>
+      <h3>Nguồn và traceability</h3>
       <p>
-        source label: <strong>{{ exercise.source_label }}</strong>.
-        Noi dung nay dung cho luyen tap, khong phai thong bao thi chinh thuc.
+        source label: <strong>{{ exercise.sourceLabel }}</strong>.
+        Nội dung này dùng cho luyện tập, không phải thông báo thi chính thức.
       </p>
-      <p v-if="exercise.source_claim_ids?.length">
-        Claim IDs:
-        <code v-for="claim in exercise.source_claim_ids" :key="claim">{{ claim }}</code>
-      </p>
-      <ul v-if="exercise.source_files?.length">
-        <li v-for="file in exercise.source_files" :key="file">
-          <code>{{ file }}</code>
+      <ul v-if="exercise.sources?.length">
+        <li v-for="source in exercise.sources" :key="`${source.claimId}-${source.sourceFile}`">
+          <code v-if="source.claimId">{{ source.claimId }}</code>
+          <code v-if="source.sourceFile">{{ source.sourceFile }}</code>
+          <span v-if="source.evidenceNote"> {{ source.evidenceNote }}</span>
         </li>
       </ul>
+      <p v-else class="muted">Bài mở rộng không có claim ID trực tiếp.</p>
     </section>
   </article>
 </template>
@@ -129,6 +128,8 @@ defineEmits(['back']);
 }
 
 .back {
+  display: inline-flex;
+  align-items: center;
   min-height: 38px;
   margin-bottom: 20px;
   padding: 0 14px;
@@ -137,6 +138,7 @@ defineEmits(['back']);
   background: #ffffff;
   color: #203040;
   font-weight: 750;
+  text-decoration: none;
 }
 
 .id {
@@ -202,7 +204,7 @@ pre {
   word-break: break-word;
 }
 
-section p code {
+li code {
   display: inline-flex;
   margin: 4px 4px 0 0;
 }

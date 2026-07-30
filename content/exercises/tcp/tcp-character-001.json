@@ -1,7 +1,7 @@
 {
   "id": "tcp-character-001",
   "title": "TCP Character Stream Word Normalization",
-  "summary": "Practice a mock TCP character-stream request, response, processing, and submission contract.",
+  "summary": "Luyện contract TCP character stream gồm request, response, xử lý payload và submission.",
   "display_order": 20,
   "status": "DRAFT",
   "track": "EXAM",
@@ -20,7 +20,7 @@
     "docs/research/exam/04_EXAM_PATTERNS.md",
     "docs/research/exam/05_COMMON_FAILURES.md"
   ],
-  "statement": "Build a Java TCP client for a mock server at <HOST>:<PORT>. The client sends the student code and question code, receives one text line, normalizes words, and submits one text line back to the mock server. This is a training exercise, not an official PTIT exam task.",
+  "statement": "Viết Java TCP client cho mock server tại <HOST>:<PORT>. Client gửi studentCode và qCode, nhận một dòng text, chuẩn hóa từng từ, rồi gửi lại một dòng kết quả cho mock server. Đây là bài luyện tập, không phải đề thi chính thức của PTIT.",
   "server_contract": {
     "host": "<HOST>",
     "port": "<PORT>",
@@ -31,10 +31,10 @@
   "request_format": "{studentCode};{qCode}",
   "response_format": "{rawText}",
   "learning_objectives": [
-    "Follow a line-based TCP request/response/submission contract.",
-    "Separate socket submission from console output."
+    "Tuân thủ contract TCP line-based gồm request, response và submission.",
+    "Tách submission qua socket khỏi console output."
   ],
-  "processing_requirement": "Capitalize the first letter of each word and lowercase the remaining letters.",
+  "processing_requirement": "Viết hoa chữ cái đầu của mỗi từ và chuyển phần còn lại thành chữ thường.",
   "submission_format": "{normalizedText}",
   "timeout": {
     "read_ms": 5000
@@ -52,6 +52,6 @@
   ],
   "estimated_time": "25m",
   "hints": [
-    "Submit data through the socket. Console output is not the submission."
+    "Gửi dữ liệu qua socket. Nội dung in ra console không phải submission."
   ]
 }

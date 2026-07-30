@@ -2,33 +2,40 @@
 
 ## Scope
 
-Version `0.2.0` is a Phase 1A start for a content-only platform.
+Version `0.3.0` establishes a conventional full-stack catalog application.
 
-No backend, database, authentication, local judge, online judge, Docker, or infrastructure is included.
+Backend, PostgreSQL persistence, REST API, Vue Router, and deployment examples are included. Authentication, local judge, online judge, sandbox, user submissions, Kubernetes, and microservices are not included.
 
 ## Components
 
 ```text
+Vue Router frontend
+        |
+        | HTTP /api/v1
+        v
+Spring Boot REST API
+        |
+        v
+PostgreSQL
+```
+
+Authoring flow:
+
+```text
 content/exercises/*.json
         |
-        v
-scripts/validate-content.mjs
+validate-content.mjs / build-content-index.mjs
         |
-        v
-scripts/build-content-index.mjs
+reviewed seed/import data
         |
-        v
-web/public/generated/exercises.json
-        |
-        v
-Vue frontend fetches generated catalog
+Flyway/PostgreSQL
 ```
 
 ## Near-term Direction
 
-1. Review schema and pilot content in the rendered UI.
+1. Review API-driven UI and PostgreSQL seed data.
 2. Expand to at most 12 pilot exercises.
-3. Keep local judge/backend out of scope until content review is complete.
+3. Keep local judge/sandbox/user submissions out of scope until content review is complete.
 
 ## Non-goals
 

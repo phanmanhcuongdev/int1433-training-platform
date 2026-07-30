@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+## [0.3.0] - 2026-07-30
+
+### Added
+
+- Spring Boot REST backend.
+- PostgreSQL persistence with Flyway migrations.
+- Exercise catalog API.
+- Vue Router routes.
+- API-driven exercise catalog and detail pages.
+- Development PostgreSQL Compose file.
+- Production Nginx reverse-proxy example.
+- Backend tests and structured API errors.
+
+### Changed
+
+- PostgreSQL replaces generated static JSON as the frontend runtime data source.
+- Vietnamese UI and pilot content now use proper diacritics and consistent language.
+- Exercise navigation is route-based and reload-safe.
+
 ## [0.2.0] - 2026-07-30
 
 ### Added

@@ -37,9 +37,9 @@ function reset() {
 </script>
 
 <template>
-  <section class="panel filters" aria-label="Bo loc bai tap">
+  <section class="panel filters" aria-label="Bộ lọc bài tập">
     <label class="search-field">
-      <span>Tim theo title, id, tag</span>
+      <span>Tìm theo title, id, tag</span>
       <input
         :value="model.search"
         type="search"
@@ -51,7 +51,7 @@ function reset() {
     <label>
       <span>Technology</span>
       <select :value="model.technology" @change="update('technology', $event.target.value)">
-        <option value="">Tat ca</option>
+        <option value="">Tất cả</option>
         <option v-for="technology in technologies" :key="technology" :value="technology">
           {{ technology }}
         </option>
@@ -61,7 +61,7 @@ function reset() {
     <label>
       <span>Level</span>
       <select :value="model.level" @change="update('level', $event.target.value)">
-        <option value="">Tat ca</option>
+        <option value="">Tất cả</option>
         <option v-for="level in levels" :key="level" :value="level">
           {{ level }}
         </option>
@@ -71,14 +71,14 @@ function reset() {
     <label>
       <span>source label</span>
       <select :value="model.sourceLabel" @change="update('sourceLabel', $event.target.value)">
-        <option value="">Tat ca</option>
+        <option value="">Tất cả</option>
         <option v-for="label in sourceLabels" :key="label" :value="label">
           {{ label }}
         </option>
       </select>
     </label>
 
-    <button type="button" @click="reset">Xoa loc</button>
+    <button type="button" @click="reset">Xóa lọc</button>
   </section>
 </template>
 

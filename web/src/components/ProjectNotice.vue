@@ -1,47 +1,48 @@
 <script setup>
 defineProps({
-  count: {
-    type: Number,
-    required: true
+  healthStatus: {
+    type: String,
+    default: ''
   }
 });
 </script>
 
 <template>
   <section class="notice">
-    <p class="eyebrow">Version 0.2.0 · Content pilot</p>
-    <h1>INT1433 Training Platform</h1>
+    <p class="eyebrow">Version 0.3.0 · Full-stack foundation</p>
+    <h1>Nền tảng luyện tập INT1433</h1>
     <p>
-      Nen tang luyen tap khong chinh thuc cho INT1433. Day khong phai he thong PTIT,
-      khong cung cap IP/port thi hien hanh, va khong thay the thong bao cua giang vien/khoa.
+      Dự án luyện tập không chính thức cho môn INT1433. Đây không phải hệ thống PTIT,
+      không cung cấp IP/port thi hiện hành, và không thay thế thông báo của giảng viên hoặc khoa.
     </p>
 
     <div class="track-grid">
       <article>
         <h2>Exam Track</h2>
-        <p>Java-first cho TCP, UDP, RMI va Web Service contract.</p>
+        <p>Java-first cho TCP, UDP, RMI và Web Service contract.</p>
       </article>
       <article>
         <h2>Extended Networking Track</h2>
-        <p>Bai mo rong de nam chac stream, protocol va loi thuong gap.</p>
+        <p>Bài mở rộng để nắm chắc stream, protocol và lỗi thường gặp.</p>
       </article>
       <article>
         <h2>Backend/Distributed Systems Track</h2>
-        <p>Huong mo rong sau, tach khoi mock exam co ban.</p>
+        <p>Hướng mở rộng sau, tách khỏi mock exam cơ bản.</p>
       </article>
     </div>
 
     <div class="status-row">
-      <span>{{ count }} bai pilot</span>
-      <span>Chua co judge</span>
-      <span>Chua co submit online</span>
+      <span>Backend REST API</span>
+      <span>PostgreSQL runtime source</span>
+      <span>Chưa có judge</span>
+      <span v-if="healthStatus">Health: {{ healthStatus }}</span>
     </div>
   </section>
 </template>
 
 <style scoped>
 .notice {
-  padding: 28px 0 12px;
+  padding: 32px 0 12px;
 }
 
 .eyebrow {

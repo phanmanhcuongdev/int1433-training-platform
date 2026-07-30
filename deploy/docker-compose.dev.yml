@@ -1,0 +1,20 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: int1433-postgres-dev
+    environment:
+      POSTGRES_DB: ${DB_NAME:-int1433}
+      POSTGRES_USER: ${DB_USER:-int1433}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-int1433_dev}
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - int1433_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-int1433} -d ${DB_NAME:-int1433}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  int1433_postgres_data:

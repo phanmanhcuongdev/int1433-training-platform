@@ -1,7 +1,7 @@
 {
   "id": "udp-string-request-id-001",
   "title": "UDP String RequestId Echo",
-  "summary": "Practice preserving requestId in a mock UDP string contract.",
+  "summary": "Luyện giữ nguyên requestId trong contract UDP string.",
   "display_order": 30,
   "status": "DRAFT",
   "track": "EXAM",
@@ -20,7 +20,7 @@
     "docs/research/exam/04_EXAM_PATTERNS.md",
     "docs/research/exam/05_COMMON_FAILURES.md"
   ],
-  "statement": "Build a Java UDP client for a mock server at <HOST>:<PORT>. The server returns a requestId and a string payload. Submit the processed answer with the same requestId. This is a training exercise, not an official PTIT exam task.",
+  "statement": "Viết Java UDP client cho mock server tại <HOST>:<PORT>. Server trả về requestId và payload dạng chuỗi. Client gửi kết quả đã xử lý kèm đúng requestId. Đây là bài luyện tập, không phải đề thi chính thức của PTIT.",
   "server_contract": {
     "host": "<HOST>",
     "port": "<PORT>",
@@ -31,10 +31,10 @@
   "request_format": ";{studentCode};{qCode}",
   "response_format": "{requestId};{data}",
   "learning_objectives": [
-    "Preserve requestId exactly across a UDP response/submission pair.",
-    "Use datagram packet length instead of the full receive buffer."
+    "Giữ nguyên requestId qua cặp UDP response/submission.",
+    "Dùng datagram packet length thay vì toàn bộ receive buffer."
   ],
-  "processing_requirement": "Reverse the payload string while preserving the exact requestId from the server response.",
+  "processing_requirement": "Đảo ngược payload string và giữ nguyên requestId nhận được từ server response.",
   "submission_format": "{requestId};{reversedData}",
   "timeout": {
     "read_ms": 5000
@@ -52,6 +52,6 @@
   ],
   "estimated_time": "25m",
   "hints": [
-    "Use the datagram packet length when converting bytes to text."
+    "Khi chuyển byte sang text, dùng độ dài packet thực tế thay vì toàn bộ receive buffer."
   ]
 }

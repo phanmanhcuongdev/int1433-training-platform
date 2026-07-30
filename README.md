@@ -10,13 +10,15 @@ Build a Java-first practice platform for INT1433. The project starts as a conten
 
 ## Current Status
 
-- Version: `0.2.0`
-- State: content pilot rendering
-- Frontend: Vue 3/Vite static app renders versioned exercise JSON
+- Version: `0.3.0`
+- State: full-stack catalog foundation
+- Frontend: Vue 3/Vite with Vue Router and REST API calls
+- Backend: Spring Boot REST API under `/api/v1`
+- Database: PostgreSQL with Flyway migrations
 - Content: 3 draft pilot exercises
 - Search/filter/detail: implemented for pilot content
 - Judge: not implemented
-- Backend/database/auth: not implemented
+- Authentication: not implemented
 
 ## Tracks
 
@@ -26,17 +28,21 @@ Build a Java-first practice platform for INT1433. The project starts as a conten
 
 ## Stack
 
-- Vue 3 + Vite + JavaScript for Phase 1 content-only UI.
-- JSON content files under `content/exercises`.
+- Vue 3 + Vite + Vue Router + JavaScript.
+- Java 21 + Spring Boot 3.x.
+- PostgreSQL + Flyway.
+- JSON content files under `content/exercises` remain authoring/import sources.
 - Node.js validation and build-time content index scripts with no extra package dependency.
 
 ## Repository Structure
 
 ```text
-docs/       Research snapshots, architecture notes, ADRs, checkpoints.
+backend/    Spring Boot REST API, Flyway migrations, tests.
 content/    Exercise schema, draft exercises, future mock exam content.
+deploy/     Development PostgreSQL compose and Nginx example.
+docs/       Research snapshots, architecture notes, ADRs, checkpoints.
 scripts/    Content validation and generated index scripts.
-web/        Static Vue/Vite frontend.
+web/        Vue/Vite frontend.
 ```
 
 ## Commands
@@ -47,17 +53,29 @@ Validate content without installing frontend dependencies:
 npm run validate
 ```
 
-Prepare the generated exercise index:
+Prepare the generated exercise index for authoring checks:
 
 ```bash
 npm run prepare-content
 ```
 
-Run the frontend:
+Start development PostgreSQL:
+
+```bash
+docker compose -f deploy/docker-compose.dev.yml up -d
+```
+
+Run the backend:
+
+```bash
+npm run backend:run
+```
+
+Run the frontend in another terminal:
 
 ```bash
 npm install
-npm run dev
+npm run frontend:dev
 ```
 
 Build the frontend:
@@ -74,14 +92,14 @@ npm run check
 
 ## Frontend Features
 
-- Loads `/generated/exercises.json`, generated from `content/exercises/**/*.json`.
-- Shows the three pilot exercises from versioned content.
+- Loads `/api/v1/exercises` through the Vite proxy in development.
+- Shows the three pilot exercises seeded into PostgreSQL by Flyway.
 - Supports search by title, id, and tag.
 - Filters by technology, level, and source label.
-- Shows exercise detail without Vue Router.
+- Uses Vue Router routes: `/`, `/exercises`, `/exercises/:id`, `/about`.
 - Includes loading, error, malformed response, and empty-result states.
 
-Generated content is a build artifact and is not committed.
+Generated content is no longer the frontend runtime data source.
 
 ## Roadmap
 

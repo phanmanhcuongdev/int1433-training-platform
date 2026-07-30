@@ -1,5 +1,7 @@
 <script setup>
+import { RouterLink } from 'vue-router';
 import SourceLabelBadge from './SourceLabelBadge.vue';
+import { minutesLabel } from '../utils/display';
 
 defineProps({
   exercise: {
@@ -8,7 +10,6 @@ defineProps({
   }
 });
 
-defineEmits(['select']);
 </script>
 
 <template>
@@ -18,7 +19,7 @@ defineEmits(['select']);
         <p class="id mono">{{ exercise.id }}</p>
         <h3>{{ exercise.title }}</h3>
       </div>
-      <SourceLabelBadge :label="exercise.source_label" />
+      <SourceLabelBadge :label="exercise.sourceLabel" />
     </div>
 
     <p class="summary">{{ exercise.summary || exercise.statement }}</p>
@@ -27,7 +28,7 @@ defineEmits(['select']);
       <span class="pill">{{ exercise.technology }}</span>
       <span class="pill">{{ exercise.level }}</span>
       <span class="pill">{{ exercise.difficulty }}</span>
-      <span class="pill">{{ exercise.estimated_time }}</span>
+      <span class="pill">{{ minutesLabel(exercise.estimatedTimeMinutes) }}</span>
       <span class="pill">{{ exercise.status || 'DRAFT' }}</span>
     </div>
 
@@ -35,7 +36,7 @@ defineEmits(['select']);
       <span v-for="tag in exercise.tags || []" :key="tag">#{{ tag }}</span>
     </div>
 
-    <button type="button" @click="$emit('select', exercise)">Xem chi tiet</button>
+    <RouterLink class="detail-link" :to="`/exercises/${exercise.id}`">Xem chi tiết</RouterLink>
   </article>
 </template>
 
@@ -84,7 +85,10 @@ h3 {
   font-size: 0.85rem;
 }
 
-button {
+.detail-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   min-height: 40px;
   border: 1px solid #203040;
@@ -92,5 +96,6 @@ button {
   background: #203040;
   color: #ffffff;
   font-weight: 750;
+  text-decoration: none;
 }
 </style>

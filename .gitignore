@@ -11,6 +11,7 @@ coverage/
 .vscode/
 *.class
 target/
+**/.mvn/wrapper/dists/
 build/
 out/
 tmp/

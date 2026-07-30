@@ -6,16 +6,11 @@ const props = defineProps({
   }
 });
 
-const descriptions = {
-  OBSERVED: 'Pattern thay truc tiep trong nguon.',
-  STRONG_PATTERN: 'Pattern co bang chung lap lai.',
-  EXTENDED: 'Bai mo rong de hoc chac.',
-  CHALLENGE: 'Ngoai scope thi co ban.'
-};
+import { sourceLabelDescriptions } from '../utils/display';
 </script>
 
 <template>
-  <span class="source-label" :title="descriptions[props.label] || props.label">
+  <span class="source-label" :title="sourceLabelDescriptions[props.label] || props.label">
     {{ props.label }}
   </span>
 </template>

@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+set -eu
+
+if command -v mvn >/dev/null 2>&1; then
+  exec mvn "$@"
+fi
+
+SCRIPT_DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+MAVEN_VERSION=3.9.9
+WRAPPER_DIR="$SCRIPT_DIR/.mvn/wrapper/dists"
+MAVEN_HOME="$WRAPPER_DIR/apache-maven-$MAVEN_VERSION"
+ARCHIVE="$WRAPPER_DIR/apache-maven-$MAVEN_VERSION-bin.tar.gz"
+DOWNLOAD_URL="https://archive.apache.org/dist/maven/maven-3/$MAVEN_VERSION/binaries/apache-maven-$MAVEN_VERSION-bin.tar.gz"
+
+if [ ! -x "$MAVEN_HOME/bin/mvn" ]; then
+  mkdir -p "$WRAPPER_DIR"
+  if [ ! -f "$ARCHIVE" ]; then
+    curl -fsSL "$DOWNLOAD_URL" -o "$ARCHIVE"
+  fi
+  tar -xzf "$ARCHIVE" -C "$WRAPPER_DIR"
+fi
+
+cd "$SCRIPT_DIR"
+exec "$MAVEN_HOME/bin/mvn" "$@"

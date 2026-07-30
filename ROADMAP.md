@@ -13,12 +13,14 @@ Status: complete in `0.1.0`.
 
 ## Phase 1A - Static Site + 12 Exercises
 
-Status: started in `0.2.0`.
+Status: evolved into full-stack catalog foundation in `0.3.0`.
 
 - Render pilot exercises in the UI. Complete for the initial 3 draft exercises.
+- Add Spring Boot REST API and PostgreSQL runtime catalog. Complete in `0.3.0`.
+- Add Vue Router and reload-safe detail routes. Complete in `0.3.0`.
 - Review schema and pilot content.
 - Expand to at most 12 reviewed exercises.
-- Keep judge/backend out of scope.
+- Keep judge, sandbox, authentication, and user submissions out of scope.
 
 ## Phase 1B - 24 Exercises
 

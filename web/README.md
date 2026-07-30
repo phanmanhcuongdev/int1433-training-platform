@@ -1,38 +1,39 @@
 # Web
 
-Vue 3 + Vite app for Phase 1 content-only rendering.
+Vue 3 + Vite app for the full-stack exercise catalog.
 
-The app loads `/generated/exercises.json`, which is generated from source JSON files under `content/exercises/`.
+The app calls the Spring Boot REST API with relative URLs. In development, Vite proxies `/api` and `/actuator` to `http://localhost:8080`.
 
-## Content Loading Flow
+## Runtime Flow
 
 ```text
-content/exercises/**/*.json
+Vue Router page
         |
-npm run prepare-content
+web/src/api/*
         |
-web/public/generated/exercises.json
+/api/v1 through Vite proxy
         |
-Vue frontend fetch()
+Spring Boot
 ```
 
-`web/public/generated/exercises.json` is ignored because it is a build artifact.
+Generated JSON remains ignored and is no longer the frontend runtime data source.
 
 ## Component Structure
 
-- `App.vue`: SPA state, filtering, selected exercise state.
+- `App.vue`: top-level layout and navigation.
+- `router/index.js`: routes for `/`, `/exercises`, `/exercises/:id`, `/about`, and 404.
+- `api/`: centralized fetch/error handling.
+- `views/`: page-level data loading.
 - `components/ProjectNotice.vue`: project status and disclaimer.
 - `components/ExerciseFilters.vue`: search and metadata filters.
 - `components/ExerciseCard.vue`: catalog card.
 - `components/ExerciseDetail.vue`: detail view.
 - `components/SourceLabelBadge.vue`: source label display.
-- `composables/useExercises.js`: generated JSON fetch and response validation.
 
 ## Commands
 
 ```bash
 npm install
-npm run prepare-content
-npm run dev
-npm run build
+npm run frontend:dev
+npm run frontend:build
 ```

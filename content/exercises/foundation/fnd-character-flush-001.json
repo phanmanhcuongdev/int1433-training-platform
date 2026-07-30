@@ -1,7 +1,7 @@
 {
   "id": "fnd-character-flush-001",
   "title": "Character Stream Flush Drill",
-  "summary": "Drill Java Reader/Writer behavior before moving to socket character streams.",
+  "summary": "Luyện hành vi Reader/Writer trong Java trước khi chuyển sang character stream qua socket.",
   "display_order": 10,
   "status": "DRAFT",
   "track": "EXAM",
@@ -9,12 +9,12 @@
   "difficulty": "EASY",
   "level": "L0",
   "source_label": "EXTENDED",
-  "statement": "Practice a line-based character stream contract locally. This is a prerequisite drill for TCP character stream exercises and does not connect to a real exam server.",
+  "statement": "Luyện một contract character stream theo dòng ở môi trường cục bộ. Bài này là prerequisite cho TCP character stream và không kết nối tới server thi thật.",
   "learning_objectives": [
-    "Understand why buffered character output must be flushed.",
-    "Recognize blocking behavior in line-based input."
+    "Hiểu vì sao output character stream có buffer cần được flush.",
+    "Nhận diện tình huống blocking trong input theo dòng."
   ],
-  "processing_requirement": "Read one input line, transform it to uppercase, write the transformed line, then flush the writer.",
+  "processing_requirement": "Đọc một dòng đầu vào, chuyển nội dung sang chữ hoa, ghi lại dòng đã xử lý, sau đó gọi flush() cho writer.",
   "common_failures": [
     "missing_flush",
     "missing_newline",
@@ -32,7 +32,7 @@
     "BufferedWriter"
   ],
   "hints": [
-    "A buffered writer may keep data in memory until flush is called."
+    "BufferedWriter có thể giữ dữ liệu trong bộ đệm cho tới khi flush() được gọi."
   ],
-  "explanation": "This pilot is intentionally content-only. It prepares for observed TCP character stream failures without claiming to be an exam problem."
+  "explanation": "Bài pilot này chuẩn bị cho lỗi TCP character stream thường gặp nhưng không tự nhận là đề thi chính thức."
 }
