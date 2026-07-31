@@ -27,7 +27,7 @@ management:
 
 int1433:
   runner:
-    image: ${JAVA_RUNNER_IMAGE:int1433-java-runner:0.6.0}
+    image: ${JAVA_RUNNER_IMAGE:int1433-java-runner:0.6.1}
     workspace-root: ${JAVA_RUNNER_WORKSPACE_ROOT:/tmp/int1433-runner-workspaces}
     compile-timeout-ms: ${JAVA_COMPILE_TIMEOUT_MS:10000}
     run-timeout-ms: ${JAVA_RUN_TIMEOUT_MS:3000}

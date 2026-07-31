@@ -10,7 +10,7 @@ Build a Java-first practice platform for INT1433 with automatic grading for sele
 
 ## Current Status
 
-- Version: `0.6.0`
+- Version: `0.6.1`
 - State: ten automatically evaluated exercises
 - Frontend: Vue 3/Vite with Vue Router and REST API calls
 - Backend: Spring Boot REST API under `/api/v1`
@@ -31,7 +31,7 @@ Build a Java-first practice platform for INT1433 with automatic grading for sele
 - Vue 3 + Vite + Vue Router + JavaScript.
 - Java 21 + Spring Boot 3.x.
 - PostgreSQL + Flyway.
-- Docker-isolated Java runner image `int1433-java-runner:0.6.0`.
+- Docker-isolated Java runner image `int1433-java-runner:0.6.1`.
 - Production images are published through GitHub Actions to GHCR.
 - Spring Web Services publishes the SOAP/WSDL challenge endpoint.
 - JSON content files under `content/exercises` remain authoring/import sources.
@@ -111,7 +111,7 @@ Images:
 - `ghcr.io/<owner>/int1433-web`
 - `ghcr.io/<owner>/int1433-java-runner`
 
-Release tag `v0.6.0` publishes `0.6.0`, `0.6`, `sha-<short-sha>` and `latest`. Pushes to `main` publish `main` and `sha-<short-sha>`. Pull requests build images but do not push.
+Semver release tags publish `<version>`, `<major>.<minor>`, `sha-<short-sha>` and `latest`. Pushes to `main` publish `main` and `sha-<short-sha>`. Pull requests build images but do not push.
 
 Server flow:
 

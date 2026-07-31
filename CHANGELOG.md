@@ -2,6 +2,12 @@
 
 ## [Unreleased]
 
+## [0.6.1] - 2026-07-31
+
+### Fixed
+
+- Styled the application header and primary navigation so production no longer renders browser-default links in the top-left corner.
+
 ## [0.6.0] - 2026-07-31
 
 ### Added
