@@ -2,6 +2,26 @@
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-07-31
+
+### Added
+
+- Dynamic Java entry class support for `JAVA_CODE` submissions.
+- Persisted `entryClassName` metadata for Java submissions.
+- Editable filename support for inline source resubmission.
+- Validation for Java filename, public class and main entrypoint consistency.
+
+### Changed
+
+- Java source filenames must now match their top-level public class.
+- The runner compiles the validated original Java filename and executes its detected entry class.
+- `JAVA_CODE` submissions no longer require `<exercise-id>.java` or `public class Main`.
+
+### Fixed
+
+- Local Java files can now be uploaded directly without renaming them before submission.
+- Existing submissions using `Main.java` remain readable and resubmittable.
+
 ## [0.5.2] - 2026-07-30
 
 ### Fixed

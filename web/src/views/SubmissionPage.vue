@@ -21,12 +21,18 @@ const loading = ref(true);
 const error = ref('');
 const editing = ref(false);
 const editSource = ref('');
+const editFileName = ref('');
 const resubmitting = ref(false);
 let timer = null;
 
 const draftKey = computed(() => submission.value ? `int1433.draft.${submission.value.exerciseId}.${submission.value.id}` : '');
+const draftFileNameKey = computed(() => submission.value ? `int1433.draft-file.${submission.value.exerciseId}.${submission.value.id}` : '');
 const sourceLines = computed(() => (submission.value?.sourceCode || '').split('\n'));
-const requiredFileName = computed(() => submission.value ? `${submission.value.exerciseId}.java` : '');
+const displayFileName = computed(() => submission.value?.originalFileName || `${submission.value?.entryClassName || 'Main'}.java`);
+const displayEntryClassName = computed(() => submission.value?.entryClassName || 'Main');
+const editValidation = computed(() => validateEditor(editFileName.value, editSource.value));
+const editSourceBytes = computed(() => new Blob([editSource.value]).size);
+const canResubmit = computed(() => !resubmitting.value && editSourceBytes.value <= 20 * 1024 && editValidation.value.ok);
 
 async function load() {
   try {
@@ -45,18 +51,23 @@ async function load() {
 
 function startEditing() {
   const draft = draftKey.value ? localStorage.getItem(draftKey.value) : null;
+  const filenameDraft = draftFileNameKey.value ? localStorage.getItem(draftFileNameKey.value) : null;
   editSource.value = draft || submission.value?.sourceCode || '';
+  editFileName.value = filenameDraft || displayFileName.value;
   editing.value = true;
 }
 
 function cancelEditing() {
   editing.value = false;
   editSource.value = '';
+  editFileName.value = '';
 }
 
 function discardDraft() {
   if (draftKey.value) localStorage.removeItem(draftKey.value);
+  if (draftFileNameKey.value) localStorage.removeItem(draftFileNameKey.value);
   editSource.value = submission.value?.sourceCode || '';
+  editFileName.value = displayFileName.value;
 }
 
 async function copySource() {
@@ -64,11 +75,13 @@ async function copySource() {
 }
 
 async function resubmit() {
+  if (!canResubmit.value) return;
   resubmitting.value = true;
   error.value = '';
   try {
-    const next = await submitJavaCode(submission.value.exerciseId, participantId, editSource.value);
+    const next = await submitJavaCode(submission.value.exerciseId, participantId, editSource.value, editFileName.value);
     if (draftKey.value) localStorage.removeItem(draftKey.value);
+    if (draftFileNameKey.value) localStorage.removeItem(draftFileNameKey.value);
     router.push({ name: 'submission-detail', params: { id: next.id } });
   } catch (requestError) {
     error.value = requestError instanceof ApiError ? requestError.message : 'Không nộp lại được mã Java';
@@ -82,6 +95,96 @@ watch(editSource, (value) => {
     localStorage.setItem(draftKey.value, value);
   }
 });
+
+watch(editFileName, (value) => {
+  if (editing.value && draftFileNameKey.value) {
+    localStorage.setItem(draftFileNameKey.value, value);
+  }
+});
+
+function isJavaIdentifier(value) {
+  return /^[$_\p{L}][$_\p{L}\p{N}\p{Mn}\p{Mc}\p{Pc}]*$/u.test(value) && !new Set([
+    'abstract', 'assert', 'boolean', 'break', 'byte', 'case', 'catch', 'char', 'class', 'const',
+    'continue', 'default', 'do', 'double', 'else', 'enum', 'extends', 'final', 'finally', 'float',
+    'for', 'goto', 'if', 'implements', 'import', 'instanceof', 'int', 'interface', 'long', 'native',
+    'new', 'package', 'private', 'protected', 'public', 'return', 'short', 'static', 'strictfp',
+    'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient', 'try', 'void',
+    'volatile', 'while', 'true', 'false', 'null', '_'
+  ]).has(value);
+}
+
+function stripCommentsAndStrings(source) {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, (match) => match.replace(/[^\n]/g, ' '))
+    .replace(/\/\/[^\n]*/g, (match) => ' '.repeat(match.length))
+    .replace(/"(?:\\.|[^"\\])*"/g, (match) => ' '.repeat(match.length))
+    .replace(/'(?:\\.|[^'\\])*'/g, (match) => ' '.repeat(match.length));
+}
+
+function topLevelPublicClasses(source) {
+  const masked = stripCommentsAndStrings(source);
+  const classes = [];
+  let depth = 0;
+  for (let i = 0; i < masked.length; i += 1) {
+    const ch = masked[i];
+    if (ch === '{') depth += 1;
+    else if (ch === '}') depth = Math.max(0, depth - 1);
+    else if (depth === 0) {
+      const declaration = readClassDeclaration(masked.slice(i));
+      if (declaration?.isPublic && declaration.className) {
+        classes.push(declaration.className);
+        i += declaration.length;
+      }
+    }
+  }
+  return classes;
+}
+
+function readClassDeclaration(text) {
+  let rest = text.trimStart();
+  let consumed = text.length - rest.length;
+  let isPublic = false;
+  while (rest.startsWith('@')) {
+    const annotation = rest.match(/^@[$_\p{L}][$_\p{L}\p{N}\p{Mn}\p{Mc}\p{Pc}.]*(?:\s*\([^)]*\))?/u);
+    if (!annotation) return null;
+    consumed += annotation[0].length;
+    rest = rest.slice(annotation[0].length).trimStart();
+    consumed = text.length - rest.length;
+  }
+  const modifiers = new Set(['public', 'abstract', 'final', 'strictfp', 'sealed', 'non-sealed']);
+  while (true) {
+    const token = rest.match(/^(non-sealed|[$_\p{L}][$_\p{L}\p{N}\p{Mn}\p{Mc}\p{Pc}]*)\b/u)?.[1];
+    if (!token) return null;
+    if (token === 'class') {
+      const afterClass = rest.slice(token.length);
+      const classMatch = afterClass.match(/^\s*([$_\p{L}][$_\p{L}\p{N}\p{Mn}\p{Mc}\p{Pc}]*)\b/u);
+      return classMatch ? { isPublic, className: classMatch[1], length: consumed + token.length + classMatch[0].length } : null;
+    }
+    if (!modifiers.has(token)) return null;
+    isPublic = isPublic || token === 'public';
+    rest = rest.slice(token.length).trimStart();
+    consumed = text.length - rest.length;
+  }
+}
+
+function validateEditor(fileName, source) {
+  if (!fileName.endsWith('.java') || fileName.includes('/') || fileName.includes('\\') || fileName.includes('..') || !isJavaIdentifier(fileName.slice(0, -5))) {
+    return { ok: false, message: 'Tên file không phải là tên lớp Java hợp lệ.' };
+  }
+  const basename = fileName.slice(0, -5);
+  const masked = stripCommentsAndStrings(source);
+  if (/^\s*package\s+[A-Za-z_$][A-Za-z0-9_$.]*\s*;/m.test(masked)) {
+    return { ok: false, message: 'Không được khai báo package trong bài một file.' };
+  }
+  const classes = topLevelPublicClasses(source);
+  if (classes.length === 0) return { ok: false, message: 'Không tìm thấy top-level public class.' };
+  if (classes.length > 1) return { ok: false, message: 'Chỉ được khai báo một top-level public class.' };
+  if (classes[0] !== basename) return { ok: false, message: `Tên public class ${classes[0]} không trùng với tên file ${fileName}.` };
+  if (!/\bpublic\s+static\s+void\s+main\s*\(\s*String\s*\[\s*\]\s+[$_\p{L}][$_\p{L}\p{N}\p{Mn}\p{Mc}\p{Pc}]*\s*\)(?:\s+throws\b[^{;]*)?\s*\{/u.test(masked)) {
+    return { ok: false, message: 'Không tìm thấy public static void main(String[] args).' };
+  }
+  return { ok: true, message: `Entry class: ${classes[0]}` };
+}
 
 onMounted(() => {
   load();
@@ -138,7 +241,9 @@ onUnmounted(() => {
         <h2>Kết quả</h2>
         <dl class="result-meta">
           <dt>File</dt>
-          <dd>{{ submission.originalFileName || requiredFileName }}</dd>
+          <dd>{{ displayFileName }}</dd>
+          <dt>Entry class</dt>
+          <dd>{{ displayEntryClassName }}</dd>
           <dt>SHA-256</dt>
           <dd><code>{{ submission.sourceSha256 || 'chưa có' }}</code></dd>
           <dt>Chấm lúc</dt>
@@ -179,7 +284,7 @@ onUnmounted(() => {
         <div class="source-heading">
           <div>
             <h2>Mã nguồn đã nộp</h2>
-            <p class="muted">{{ submission.originalFileName || requiredFileName }}</p>
+            <p class="muted">{{ displayFileName }} · {{ displayEntryClassName }}</p>
           </div>
           <div class="source-actions">
             <button type="button" class="secondary" @click="copySource">Copy</button>
@@ -198,14 +303,20 @@ onUnmounted(() => {
         </div>
 
         <div v-else class="edit-panel">
+          <label class="filename-field">
+            <span>Tên file</span>
+            <input v-model.trim="editFileName" type="text" spellcheck="false" />
+          </label>
+          <p class="muted">{{ editValidation.ok ? editValidation.message : 'Tên file Java phải trùng với tên public class.' }}</p>
+          <p v-if="!editValidation.ok" class="state state-error">{{ editValidation.message }}</p>
           <textarea v-model="editSource" class="source-editor" spellcheck="false" />
           <div class="actions">
-            <button type="button" :disabled="resubmitting || editSource.length > 20000" @click="resubmit">
+            <button type="button" :disabled="!canResubmit" @click="resubmit">
               {{ resubmitting ? 'Đang chấm...' : 'Nộp lại' }}
             </button>
             <button type="button" class="secondary" :disabled="resubmitting" @click="cancelEditing">Hủy chỉnh sửa</button>
             <button type="button" class="secondary" :disabled="resubmitting" @click="discardDraft">Bỏ draft</button>
-            <span class="muted">{{ editSource.length }} / 20000 ký tự</span>
+            <span class="muted">{{ editSourceBytes }} / 20480 bytes</span>
           </div>
         </div>
       </section>
@@ -377,6 +488,23 @@ dd {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 0.92rem;
   line-height: 1.55;
+}
+
+.filename-field {
+  display: grid;
+  gap: 6px;
+  max-width: 360px;
+  margin-bottom: 10px;
+  color: #405166;
+  font-weight: 800;
+}
+
+.filename-field input {
+  min-height: 38px;
+  padding: 0 10px;
+  border: 1px solid #cfd8e3;
+  border-radius: 6px;
+  font: inherit;
 }
 
 button {

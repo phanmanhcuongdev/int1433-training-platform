@@ -93,7 +93,7 @@ public class ExerciseController {
         @RequestHeader(ParticipantService.HEADER) String participantHeader,
         @Valid @RequestBody CodeSubmissionRequest request
     ) {
-        return submissionService.submitCode(id, participantService.parse(participantHeader), request.language(), request.sourceCode());
+        return submissionService.submitCode(id, participantService.parse(participantHeader), request.language(), request.originalFileName(), request.sourceCode());
     }
 
     @PostMapping(path = "/{id}/submissions", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)

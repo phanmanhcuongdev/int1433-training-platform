@@ -49,7 +49,6 @@
     "request_format": { "type": "string" },
     "response_format": { "type": "string" },
     "submission_format": { "type": "string" },
-    "requiredFileName": { "type": "string" },
     "submissionInstructions": { "type": "string" },
     "timeout": { "type": "object" },
     "starter_code": { "type": ["object", "string"] },

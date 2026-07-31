@@ -45,6 +45,9 @@ public class Submission {
     @Column(name = "original_file_name")
     private String originalFileName;
 
+    @Column(name = "entry_class_name")
+    private String entryClassName;
+
     @Column(name = "source_sha256")
     private String sourceSha256;
 
@@ -81,7 +84,7 @@ public class Submission {
     @OneToMany(mappedBy = "submission", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SubmissionTestResult> testResults = new ArrayList<>();
 
-    public static Submission createCode(UUID participantId, Exercise exercise, String language, String sourceCode, String originalFileName, String sourceSha256) {
+    public static Submission createCode(UUID participantId, Exercise exercise, String language, String sourceCode, String originalFileName, String entryClassName, String sourceSha256) {
         Submission submission = new Submission();
         submission.id = UUID.randomUUID();
         submission.participantId = participantId;
@@ -90,6 +93,7 @@ public class Submission {
         submission.language = language;
         submission.sourceCode = sourceCode;
         submission.originalFileName = originalFileName;
+        submission.entryClassName = entryClassName;
         submission.sourceSha256 = sourceSha256;
         submission.status = SubmissionStatus.PENDING;
         submission.verdict = Verdict.PENDING;
@@ -105,6 +109,7 @@ public class Submission {
     public String getLanguage() { return language; }
     public String getSourceCode() { return sourceCode; }
     public String getOriginalFileName() { return originalFileName; }
+    public String getEntryClassName() { return entryClassName; }
     public String getSourceSha256() { return sourceSha256; }
     public SubmissionStatus getStatus() { return status; }
     public Verdict getVerdict() { return verdict; }

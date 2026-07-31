@@ -1,6 +1,6 @@
 {
   "name": "int1433-training-platform",
-  "version": "0.5.2",
+  "version": "0.6.0",
   "private": true,
   "description": "Unofficial Java-first training platform for INT1433.",
   "workspaces": [
@@ -10,7 +10,7 @@
     "prepare-content": "npm run validate && node scripts/build-content-index.mjs",
     "frontend:dev": "npm --workspace web run dev --",
     "frontend:build": "npm --workspace web run build",
-    "runner:build": "docker build -t int1433-java-runner:0.5.2 runner",
+    "runner:build": "docker build -t int1433-java-runner:0.6.0 runner",
     "backend:test": "npm run runner:build && ./backend/mvnw test",
     "backend:run": "./backend/mvnw spring-boot:run -Dspring-boot.run.profiles=dev",
     "content:import:dry": "./backend/mvnw -q spring-boot:run -Dspring-boot.run.profiles=dev -Dspring-boot.run.arguments=\"--spring.main.web-application-type=none --app.command=content-import --content.import.dry-run=true\"",

@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Size;
 
 public record CodeSubmissionRequest(
     @NotBlank String language,
-    @NotBlank @Size(max = 20000) String sourceCode
+    @Size(max = 255) String originalFileName,
+    @NotBlank @Size(max = 20480) String sourceCode
 ) {
 }

@@ -19,13 +19,13 @@ The backend's access to the Docker daemon is trusted infrastructure. Do not expo
 Build locally:
 
 ```bash
-docker build -t int1433-java-runner:0.5.2 runner
+docker build -t int1433-java-runner:0.6.0 runner
 ```
 
 GHCR release image:
 
 ```text
-ghcr.io/<owner>/int1433-java-runner:0.5.2
+ghcr.io/<owner>/int1433-java-runner:0.6.0
 ```
 
 The runner image is not a long-running Compose service. The backend starts it on demand with `--network none`, memory/CPU/PID limits, read-only filesystem, dropped capabilities and a bounded shared workspace mount.

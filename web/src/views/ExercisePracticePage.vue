@@ -21,12 +21,12 @@ const loading = ref(true);
 const submitting = ref(false);
 const error = ref('');
 const selectedFile = ref(null);
+const selectedClassName = ref('');
 const fileError = ref('');
 const uploadZoneActive = ref(false);
 
 const isJavaCode = computed(() => evaluation.value?.evaluationMode === 'JAVA_CODE');
 const isNetwork = computed(() => evaluation.value?.evaluationMode === 'NETWORK_CHALLENGE');
-const requiredFileName = computed(() => `${props.id}.java`);
 const canSubmitFile = computed(() => selectedFile.value && !fileError.value && !submitting.value);
 
 async function load() {
@@ -86,6 +86,7 @@ async function handleDrop(event) {
 
 async function validateAndSetFile(files) {
   selectedFile.value = null;
+  selectedClassName.value = '';
   fileError.value = '';
 
   if (!files || files.length !== 1) {
@@ -94,12 +95,13 @@ async function validateAndSetFile(files) {
   }
 
   const file = files[0];
-  if (file.name !== requiredFileName.value) {
-    fileError.value = `Tên file phải là ${requiredFileName.value}.`;
+  const fileName = file.name || '';
+  if (!fileName.endsWith('.java')) {
+    fileError.value = 'Chỉ chấp nhận một file .java.';
     return;
   }
-  if (!file.name.endsWith('.java')) {
-    fileError.value = 'Chỉ chấp nhận một file .java.';
+  if (fileName.includes('/') || fileName.includes('\\') || fileName.includes('..') || !isJavaIdentifier(fileName.slice(0, -5))) {
+    fileError.value = 'Tên file không phải là tên lớp Java hợp lệ.';
     return;
   }
   if (file.size === 0) {
@@ -119,12 +121,103 @@ async function validateAndSetFile(files) {
     return;
   }
 
-  if (!source.includes('public class Main')) {
-    fileError.value = 'Mã nguồn phải chứa public class Main.';
+  const validation = validateJavaSource(fileName, source);
+  if (!validation.ok) {
+    fileError.value = validation.message;
     return;
   }
 
   selectedFile.value = file;
+  selectedClassName.value = validation.entryClassName;
+}
+
+function isJavaIdentifier(value) {
+  return /^[$_\p{L}][$_\p{L}\p{N}\p{Mn}\p{Mc}\p{Pc}]*$/u.test(value) && !new Set([
+    'abstract', 'assert', 'boolean', 'break', 'byte', 'case', 'catch', 'char', 'class', 'const',
+    'continue', 'default', 'do', 'double', 'else', 'enum', 'extends', 'final', 'finally', 'float',
+    'for', 'goto', 'if', 'implements', 'import', 'instanceof', 'int', 'interface', 'long', 'native',
+    'new', 'package', 'private', 'protected', 'public', 'return', 'short', 'static', 'strictfp',
+    'super', 'switch', 'synchronized', 'this', 'throw', 'throws', 'transient', 'try', 'void',
+    'volatile', 'while', 'true', 'false', 'null', '_'
+  ]).has(value);
+}
+
+function stripCommentsAndStrings(source) {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, (match) => match.replace(/[^\n]/g, ' '))
+    .replace(/\/\/[^\n]*/g, (match) => ' '.repeat(match.length))
+    .replace(/"(?:\\.|[^"\\])*"/g, (match) => ' '.repeat(match.length))
+    .replace(/'(?:\\.|[^'\\])*'/g, (match) => ' '.repeat(match.length));
+}
+
+function topLevelPublicClasses(source) {
+  const masked = stripCommentsAndStrings(source);
+  const classes = [];
+  let depth = 0;
+  for (let i = 0; i < masked.length; i += 1) {
+    const ch = masked[i];
+    if (ch === '{') {
+      depth += 1;
+    } else if (ch === '}') {
+      depth = Math.max(0, depth - 1);
+    } else if (depth === 0) {
+      const declaration = readClassDeclaration(masked.slice(i));
+      if (declaration?.isPublic && declaration.className) {
+        classes.push(declaration.className);
+        i += declaration.length;
+      }
+    }
+  }
+  return classes;
+}
+
+function readClassDeclaration(text) {
+  let rest = text.trimStart();
+  let consumed = text.length - rest.length;
+  let isPublic = false;
+  while (rest.startsWith('@')) {
+    const annotation = rest.match(/^@[$_\p{L}][$_\p{L}\p{N}\p{Mn}\p{Mc}\p{Pc}.]*(?:\s*\([^)]*\))?/u);
+    if (!annotation) return null;
+    consumed += annotation[0].length;
+    rest = rest.slice(annotation[0].length).trimStart();
+    consumed = text.length - rest.length;
+  }
+  const modifiers = new Set(['public', 'abstract', 'final', 'strictfp', 'sealed', 'non-sealed']);
+  while (true) {
+    const token = rest.match(/^(non-sealed|[$_\p{L}][$_\p{L}\p{N}\p{Mn}\p{Mc}\p{Pc}]*)\b/u)?.[1];
+    if (!token) return null;
+    if (token === 'class') {
+      const afterClass = rest.slice(token.length);
+      const classMatch = afterClass.match(/^\s*([$_\p{L}][$_\p{L}\p{N}\p{Mn}\p{Mc}\p{Pc}]*)\b/u);
+      return classMatch ? { isPublic, className: classMatch[1], length: consumed + token.length + classMatch[0].length } : null;
+    }
+    if (!modifiers.has(token)) return null;
+    isPublic = isPublic || token === 'public';
+    rest = rest.slice(token.length).trimStart();
+    consumed = text.length - rest.length;
+  }
+}
+
+function validateJavaSource(fileName, source) {
+  const basename = fileName.slice(0, -5);
+  const masked = stripCommentsAndStrings(source);
+  if (/^\s*package\s+[A-Za-z_$][A-Za-z0-9_$.]*\s*;/m.test(masked)) {
+    return { ok: false, message: 'Không được khai báo package trong bài một file.' };
+  }
+  const classes = topLevelPublicClasses(source);
+  if (classes.length === 0) {
+    return { ok: false, message: 'Không tìm thấy top-level public class.' };
+  }
+  if (classes.length > 1) {
+    return { ok: false, message: 'Chỉ được khai báo một top-level public class.' };
+  }
+  if (classes[0] !== basename) {
+    return { ok: false, message: `Tên public class ${classes[0]} không trùng với tên file ${fileName}.` };
+  }
+  if (!/\bpublic\s+static\s+void\s+main\s*\(\s*String\s*\[\s*\]\s+[$_\p{L}][$_\p{L}\p{N}\p{Mn}\p{Mc}\p{Pc}]*\s*\)(?:\s+throws\b[^{;]*)?\s*\{/u.test(masked)) {
+    return { ok: false, message: 'Không tìm thấy public static void main(String[] args).' };
+  }
+  return { ok: true, entryClassName: classes[0] };
 }
 
 onMounted(load);
@@ -225,12 +318,12 @@ onMounted(load);
           <input type="file" accept=".java,text/x-java-source,text/plain" @change="handleFileInput" />
           <strong>Kéo thả file Java vào đây</strong>
           <span>hoặc bấm để chọn file</span>
-          <code>{{ requiredFileName }}</code>
-          <small>Mã nguồn bên trong phải chứa <code>public class Main</code>, UTF-8, tối đa 20 KB.</small>
+          <small>Tên file Java phải trùng với tên <code>public class</code>, UTF-8, tối đa 20 KB, không khai báo package.</small>
         </label>
         <p v-if="fileError" class="state state-error">{{ fileError }}</p>
         <p v-if="selectedFile" class="selected-file">
           Đã chọn: <strong>{{ selectedFile.name }}</strong>
+          <span>Class: <strong>{{ selectedClassName }}</strong></span>
           <span>{{ Math.ceil(selectedFile.size / 1024) }} KB</span>
         </p>
         <div class="actions">

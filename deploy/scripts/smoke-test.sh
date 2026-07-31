@@ -22,7 +22,8 @@ RESPONSE_FILE="$(mktemp)"
 cat > "$REQUEST_FILE" <<'JSON'
 {
   "language": "JAVA",
-  "sourceCode": "import java.io.*; public class Main { public static void main(String[] args) throws Exception { BufferedReader in = new BufferedReader(new InputStreamReader(System.in, java.nio.charset.StandardCharsets.UTF_8)); BufferedWriter out = new BufferedWriter(new OutputStreamWriter(System.out, java.nio.charset.StandardCharsets.UTF_8)); String line = in.readLine(); if (line == null) line = \"\"; out.write(line.trim().replaceAll(\"\\\\s+\", \" \").toUpperCase(java.util.Locale.ROOT)); out.newLine(); out.flush(); } }"
+  "originalFileName": "CharacterFlush.java",
+  "sourceCode": "import java.io.*; public class CharacterFlush { public static void main(String[] args) throws Exception { BufferedReader in = new BufferedReader(new InputStreamReader(System.in, java.nio.charset.StandardCharsets.UTF_8)); BufferedWriter out = new BufferedWriter(new OutputStreamWriter(System.out, java.nio.charset.StandardCharsets.UTF_8)); String line = in.readLine(); if (line == null) line = \"\"; out.write(line.trim().replaceAll(\"\\\\s+\", \" \").toUpperCase(java.util.Locale.ROOT)); out.newLine(); out.flush(); } }"
 }
 JSON
 curl -fsS -H "Content-Type: application/json" -H "X-Participant-Id: $PARTICIPANT_ID" \

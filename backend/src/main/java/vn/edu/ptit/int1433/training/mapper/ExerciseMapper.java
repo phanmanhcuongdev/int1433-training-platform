@@ -114,7 +114,7 @@ public class ExerciseMapper {
     private List<String> instructionsFor(Exercise exercise) {
         if ("JAVA_CODE".equals(exercise.getEvaluationMode())) {
             return List.of(
-                "Nộp một file Java chứa public class Main.",
+                "Nộp một file Java có tên trùng với top-level public class.",
                 "Code được compile và chạy trong runner cô lập.",
                 "Không dùng thư viện ngoài JDK 21."
             );

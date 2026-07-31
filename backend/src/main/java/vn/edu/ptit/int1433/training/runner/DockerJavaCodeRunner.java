@@ -54,10 +54,7 @@ public class DockerJavaCodeRunner implements JavaCodeRunner, InitializingBean {
     }
 
     @Override
-    public RunnerResult judge(Exercise exercise, String sourceCode) {
-        if (!sourceCode.contains("public class Main")) {
-            return new RunnerResult(Verdict.CE, "MISSING_MAIN_CLASS", "Source phải chứa public class Main.", "Missing public class Main", "", List.of());
-        }
+    public RunnerResult judge(Exercise exercise, JavaSourceSubmission source) {
         if (!runnerImageAvailable()) {
             return new RunnerResult(Verdict.INTERNAL_ERROR, "RUNNER_IMAGE_UNAVAILABLE", "Runner image chưa sẵn sàng trên máy chủ.", "", "", List.of());
         }
@@ -66,11 +63,14 @@ public class DockerJavaCodeRunner implements JavaCodeRunner, InitializingBean {
         try {
             workspace = createWorkspace();
             trySetOpenPermissions(workspace);
-            Path sourceFile = workspace.resolve("Main.java");
-            Files.writeString(sourceFile, sourceCode, StandardCharsets.UTF_8);
+            Path sourceFile = workspace.resolve(source.originalFileName()).toAbsolutePath().normalize();
+            if (!sourceFile.startsWith(workspace)) {
+                throw new IOException("Runner source file escaped workspace");
+            }
+            Files.writeString(sourceFile, source.sourceCode(), StandardCharsets.UTF_8);
             trySetOpenPermissions(sourceFile);
 
-            ProcessResult compile = runDocker(workspace, List.of("javac", "-encoding", "UTF-8", "Main.java"), new byte[0], properties.compileTimeoutMs());
+            ProcessResult compile = runDocker(workspace, List.of("javac", "-encoding", "UTF-8", source.originalFileName()), new byte[0], properties.compileTimeoutMs());
             if (compile.timedOut()) {
                 return new RunnerResult(Verdict.TLE, "COMPILE_TIMEOUT", "Biên dịch quá thời gian.", compile.combinedOutput(), "", List.of());
             }
@@ -79,8 +79,8 @@ public class DockerJavaCodeRunner implements JavaCodeRunner, InitializingBean {
             }
 
             return switch (exercise.getId()) {
-                case "fnd-character-flush-001" -> judgeCharacter(workspace);
-                case "fnd-data-order-001" -> judgeDataOrder(workspace);
+                case "fnd-character-flush-001" -> judgeCharacter(workspace, source.entryClassName());
+                case "fnd-data-order-001" -> judgeDataOrder(workspace, source.entryClassName());
                 default -> new RunnerResult(Verdict.INTERNAL_ERROR, "UNKNOWN_JAVA_GRADER", "Bài này chưa có Java grader.", "", "", List.of());
             };
         } catch (IOException exception) {
@@ -101,7 +101,7 @@ public class DockerJavaCodeRunner implements JavaCodeRunner, InitializingBean {
         return workspace;
     }
 
-    private RunnerResult judgeCharacter(Path workspace) throws IOException {
+    private RunnerResult judgeCharacter(Path workspace, String entryClassName) throws IOException {
         List<TextCase> cases = List.of(
             new TextCase("hello\n", "HELLO"),
             new TextCase("  Lap   trinh  mang  \n", "LAP TRINH MANG"),
@@ -112,7 +112,7 @@ public class DockerJavaCodeRunner implements JavaCodeRunner, InitializingBean {
         List<RunnerTestResult> results = new ArrayList<>();
         String runtime = "";
         for (int index = 0; index < cases.size(); index += 1) {
-            ProcessResult run = runDocker(workspace, List.of("java", "Main"), cases.get(index).input().getBytes(StandardCharsets.UTF_8), properties.runTimeoutMs());
+            ProcessResult run = runDocker(workspace, List.of("java", entryClassName), cases.get(index).input().getBytes(StandardCharsets.UTF_8), properties.runTimeoutMs());
             runtime = run.combinedOutput();
             RunnerTestResult result = classifyText(index + 1, run, cases.get(index).expected());
             results.add(result);
@@ -123,7 +123,7 @@ public class DockerJavaCodeRunner implements JavaCodeRunner, InitializingBean {
         return aggregate(Verdict.AC, "AC", "Tất cả hidden test đều đúng.", runtime, results);
     }
 
-    private RunnerResult judgeDataOrder(Path workspace) throws IOException {
+    private RunnerResult judgeDataOrder(Path workspace, String entryClassName) throws IOException {
         List<DataCase> cases = List.of(
             new DataCase(12, 18, 5, 1.5d),
             new DataCase(7, 13, 100, 2.25d),
@@ -133,7 +133,7 @@ public class DockerJavaCodeRunner implements JavaCodeRunner, InitializingBean {
         String runtime = "";
         for (int index = 0; index < cases.size(); index += 1) {
             byte[] input = dataInput(cases.get(index));
-            ProcessResult run = runDocker(workspace, List.of("java", "Main"), input, properties.runTimeoutMs());
+            ProcessResult run = runDocker(workspace, List.of("java", entryClassName), input, properties.runTimeoutMs());
             runtime = run.stderrString();
             RunnerTestResult result = classifyBinary(index + 1, run, cases.get(index));
             results.add(result);

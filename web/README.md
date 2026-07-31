@@ -33,7 +33,7 @@ Generated JSON remains ignored and is no longer the frontend runtime data source
 
 Practice pages call backend endpoints for Java submissions and network challenge sessions. The UI never asks learners to self-report completion.
 
-For `JAVA_CODE` exercises, the practice route keeps the exercise statement, examples, common failures and file upload on one page. Learners upload exactly one `<exercise-id>.java` file, then the submission route shows the verdict, hidden test summary, submitted source, copy action and an inline edit/resubmit flow. This is intentionally not a full browser IDE and does not add a "run thử" button.
+For `JAVA_CODE` exercises, the practice route keeps the exercise statement, examples, common failures and file upload on one page. Learners upload exactly one `.java` file whose name matches its top-level public class, then the submission route shows the verdict, hidden test summary, submitted source, copy action and an inline edit/resubmit flow with an editable filename field. This is intentionally not a full browser IDE and does not add a "run thử" button.
 
 ## Commands
 

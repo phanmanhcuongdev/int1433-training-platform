@@ -15,6 +15,7 @@ public record SubmissionResponse(
     String diagnosticCode,
     String publicMessage,
     String originalFileName,
+    String entryClassName,
     String sourceSha256,
     String sourceCode,
     String compileOutput,

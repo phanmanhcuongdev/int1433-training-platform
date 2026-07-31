@@ -26,16 +26,15 @@
   "prerequisites": ["DataInputStream", "DataOutputStream", "Ước chung lớn nhất", "Bội chung nhỏ nhất"],
   "server_contract": {
     "mode": "JAVA_CODE",
-    "entrypoint": "public class Main",
+    "entrypoint": "Tên file Java trùng với top-level public class",
     "input": "stdin binary primitives",
     "output": "stdout binary primitives"
   },
   "request_format": "int a, int b, long c, double d theo chuẩn DataInputStream của Java.",
   "response_format": "Không có server response.",
   "processing_requirement": "Tính gcd, lcm, tổng long và double nhân đôi từ primitive đã đọc.",
-  "submission_format": "Upload đúng một file fnd-data-order-001.java. Chương trình ghi int gcd, long lcm, long total, double doubled theo chuẩn DataOutputStream.",
-  "requiredFileName": "fnd-data-order-001.java",
-  "submissionInstructions": "Upload đúng một file Java UTF-8, tối đa 20 KB. Backend sẽ compile source dưới tên Main.java trong runner cô lập.",
+  "submission_format": "Upload đúng một file .java. Tên file Java phải trùng với tên top-level public class, không khai báo package, và class đó phải có public static void main(String[] args). Chương trình ghi int gcd, long lcm, long total, double doubled theo chuẩn DataOutputStream.",
+  "submissionInstructions": "Upload đúng một file Java UTF-8, tối đa 20 KB. Backend sẽ compile và chạy theo tên file/public class đã validate.",
   "timeout": { "compile_ms": 10000, "run_ms": 3000 },
   "constraints": [
     "1 <= a,b <= 100000",
@@ -77,7 +76,7 @@
   ],
   "starter_code": {
     "language": "JAVA",
-    "source": "import java.io.*;\n\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        DataInputStream in = new DataInputStream(new BufferedInputStream(System.in));\n        DataOutputStream out = new DataOutputStream(new BufferedOutputStream(System.out));\n        // Đọc primitive và ghi kết quả tại đây.\n        out.flush();\n    }\n}\n"
+    "source": "import java.io.*;\n\npublic class DataOrder {\n    public static void main(String[] args) throws Exception {\n        DataInputStream in = new DataInputStream(new BufferedInputStream(System.in));\n        DataOutputStream out = new DataOutputStream(new BufferedOutputStream(System.out));\n        // Đọc primitive và ghi kết quả tại đây.\n        out.flush();\n    }\n}\n"
   },
   "evaluation_mode": "JAVA_CODE",
   "grader_key": "java.fnd.data_order.v1",

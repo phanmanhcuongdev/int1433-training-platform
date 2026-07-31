@@ -49,8 +49,8 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void wrongAnswerReturnsWa() throws Exception {
-        SubmissionResponse response = submit("fnd-character-flush-001", """
-            public class Main {
+        SubmissionResponse response = submit("fnd-character-flush-001", "WrongAnswer.java", """
+            public class WrongAnswer {
                 public static void main(String[] args) {
                     System.out.println("SAI");
                 }
@@ -62,15 +62,21 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void syntaxErrorReturnsCe() throws Exception {
-        SubmissionResponse response = submit("fnd-character-flush-001", "public class Main {");
+        SubmissionResponse response = submit("fnd-character-flush-001", "Broken.java", """
+            public class Broken {
+                public static void main(String[] args) {
+                    int value = ;
+                }
+            }
+            """);
 
         assertThat(response.verdict()).isEqualTo("CE");
     }
 
     @Test
     void runtimeExceptionReturnsRe() throws Exception {
-        SubmissionResponse response = submit("fnd-character-flush-001", """
-            public class Main {
+        SubmissionResponse response = submit("fnd-character-flush-001", "Boom.java", """
+            public class Boom {
                 public static void main(String[] args) {
                     throw new RuntimeException("boom");
                 }
@@ -82,8 +88,8 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void infiniteLoopReturnsTle() throws Exception {
-        SubmissionResponse response = submit("fnd-character-flush-001", """
-            public class Main {
+        SubmissionResponse response = submit("fnd-character-flush-001", "Loop.java", """
+            public class Loop {
                 public static void main(String[] args) {
                     while (true) {
                     }
@@ -96,8 +102,8 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void excessiveOutputIsCapped() throws Exception {
-        SubmissionResponse response = submit("fnd-character-flush-001", """
-            public class Main {
+        SubmissionResponse response = submit("fnd-character-flush-001", "Noisy.java", """
+            public class Noisy {
                 public static void main(String[] args) {
                     for (int i = 0; i < 200000; i++) {
                         System.out.print("x");
@@ -112,8 +118,8 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void outboundNetworkAttemptDoesNotSucceed() throws Exception {
-        SubmissionResponse response = submit("fnd-character-flush-001", """
-            public class Main {
+        SubmissionResponse response = submit("fnd-character-flush-001", "NetworkAttempt.java", """
+            public class NetworkAttempt {
                 public static void main(String[] args) throws Exception {
                     new java.net.Socket("example.com", 80);
                     System.out.println("SHOULD_NOT_CONNECT");
@@ -125,11 +131,20 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void missingMainClassReturnsCe() throws Exception {
+    void jsonSubmissionWithoutFilenameInfersClassNameForCompatibility() throws Exception {
+        SubmissionResponse response = submit("fnd-character-flush-001", null, characterSolution("CharacterFlush"));
+
+        assertThat(response.verdict()).isEqualTo("AC");
+        assertThat(response.originalFileName()).isEqualTo("CharacterFlush.java");
+        assertThat(response.entryClassName()).isEqualTo("CharacterFlush");
+    }
+
+    @Test
+    void missingPublicClassIsRejected() throws Exception {
         mockMvc.perform(post("/api/v1/exercises/fnd-character-flush-001/code-submissions")
                 .header(ParticipantService.HEADER, PARTICIPANT)
                 .contentType("application/json")
-                .content(objectMapper.writeValueAsString(Map.of("language", "JAVA", "sourceCode", """
+                .content(objectMapper.writeValueAsString(Map.of("language", "JAVA", "originalFileName", "Main.java", "sourceCode", """
                     class Main {
                         public static void main(String[] args) {
                             System.out.println("HELLO");
@@ -137,7 +152,7 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
                     }
                     """))))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message").value("Mã nguồn phải chứa public class Main."));
+            .andExpect(jsonPath("$.message").value("Không tìm thấy top-level public class."));
     }
 
     @Test
@@ -151,12 +166,12 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void multipartUploadWithRequiredFilenameReturnsAcAndPersistsSourceMetadata() throws Exception {
+    void multipartUploadWithNaturalJavaFilenameReturnsAcAndPersistsSourceMetadata() throws Exception {
         MockMultipartFile file = new MockMultipartFile(
             "file",
-            "fnd-character-flush-001.java",
+            "CharacterFlush.java",
             "text/x-java-source",
-            characterSolution().getBytes(java.nio.charset.StandardCharsets.UTF_8)
+            characterSolution("CharacterFlush").getBytes(java.nio.charset.StandardCharsets.UTF_8)
         );
 
         String responseBody = mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
@@ -164,9 +179,10 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
                 .header(ParticipantService.HEADER, PARTICIPANT))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.verdict").value("AC"))
-            .andExpect(jsonPath("$.originalFileName").value("fnd-character-flush-001.java"))
+            .andExpect(jsonPath("$.originalFileName").value("CharacterFlush.java"))
+            .andExpect(jsonPath("$.entryClassName").value("CharacterFlush"))
             .andExpect(jsonPath("$.sourceSha256").isNotEmpty())
-            .andExpect(jsonPath("$.sourceCode").value(org.hamcrest.Matchers.containsString("public class Main")))
+            .andExpect(jsonPath("$.sourceCode").value(org.hamcrest.Matchers.containsString("public class CharacterFlush")))
             .andReturn()
             .getResponse()
             .getContentAsString();
@@ -174,24 +190,164 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
         SubmissionResponse response = objectMapper.readValue(responseBody, SubmissionResponse.class);
         mockMvc.perform(get("/api/v1/submissions/" + response.id()).header(ParticipantService.HEADER, PARTICIPANT))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.originalFileName").value("fnd-character-flush-001.java"))
+            .andExpect(jsonPath("$.originalFileName").value("CharacterFlush.java"))
+            .andExpect(jsonPath("$.entryClassName").value("CharacterFlush"))
             .andExpect(jsonPath("$.sourceCode").value(org.hamcrest.Matchers.containsString("BufferedReader")));
     }
 
     @Test
-    void multipartUploadRejectsWrongFilename() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "Main.java", "text/x-java-source", characterSolution().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    void multipartUploadAcceptsShortClassNameA() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "A.java", "text/x-java-source", """
+            public class A {
+                public static void main(String[] args) {
+                    System.out.println("SAI");
+                }
+            }
+            """.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
+                .file(file)
+                .header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.originalFileName").value("A.java"))
+            .andExpect(jsonPath("$.entryClassName").value("A"));
+    }
+
+    @Test
+    void multipartUploadAcceptsAnnotatedFinalPublicClassAndIgnoresCommentText() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "A.java", "text/x-java-source", """
+            // package foo;
+            // public class CommentOnly {}
+            @Deprecated
+            final public class A {
+                public static void main(String[] args) throws Exception {
+                    System.out.println("SAI");
+                }
+            }
+            """.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
+                .file(file)
+                .header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.originalFileName").value("A.java"))
+            .andExpect(jsonPath("$.entryClassName").value("A"));
+    }
+
+    @Test
+    void multipartUploadIgnoresPublicClassTextInsideString() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "A.java", "text/x-java-source", """
+            public class A {
+                public static void main(String[] args) {
+                    String text = "public class B {} package foo;";
+                    System.out.println(text);
+                }
+            }
+            """.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
+                .file(file)
+                .header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.entryClassName").value("A"));
+    }
+
+    @Test
+    void multipartUploadRejectsClassNameDifferentFromFilename() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "A.java", "text/x-java-source", """
+            public class Main {
+                public static void main(String[] args) {
+                    System.out.println("HELLO");
+                }
+            }
+            """.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
         mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
                 .file(file)
                 .header(ParticipantService.HEADER, PARTICIPANT))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message").value("Tên file phải là fnd-character-flush-001.java."));
+            .andExpect(jsonPath("$.message").value("Tên public class Main không trùng với tên file A.java."));
+    }
+
+    @Test
+    void multipartUploadRejectsInvalidJavaIdentifierFilename() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "Invalid-name.java", "text/x-java-source", characterSolution("InvalidName").getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
+                .file(file)
+                .header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("Tên file không phải là tên lớp Java hợp lệ."));
+    }
+
+    @Test
+    void multipartUploadRejectsPackageDeclaration() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "A.java", "text/x-java-source", """
+            package foo;
+            public class A {
+                public static void main(String[] args) {
+                }
+            }
+            """.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
+                .file(file)
+                .header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("Không được khai báo package trong bài một file."));
+    }
+
+    @Test
+    void multipartUploadRejectsTwoTopLevelPublicClasses() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "A.java", "text/x-java-source", """
+            public class A {
+                public static void main(String[] args) {
+                }
+            }
+            public class B {
+            }
+            """.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
+                .file(file)
+                .header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("Chỉ được khai báo một top-level public class."));
+    }
+
+    @Test
+    void multipartUploadRejectsMissingMainMethod() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "A.java", "text/x-java-source", "public class A {}".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+
+        mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
+                .file(file)
+                .header(ParticipantService.HEADER, PARTICIPANT))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("Không tìm thấy public static void main(String[] args)."));
+    }
+
+    @Test
+    void jsonSubmissionRejectsPathTraversalFilename() throws Exception {
+        mockMvc.perform(post("/api/v1/exercises/fnd-character-flush-001/code-submissions")
+                .header(ParticipantService.HEADER, PARTICIPANT)
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(Map.of(
+                    "language", "JAVA",
+                    "originalFileName", "../A.java",
+                    "sourceCode", """
+                        public class A {
+                            public static void main(String[] args) {
+                            }
+                        }
+                        """
+                ))))
+            .andExpect(status().isBadRequest())
+            .andExpect(jsonPath("$.message").value("Tên file không phải là tên lớp Java hợp lệ."));
     }
 
     @Test
     void multipartUploadRejectsEmptyFile() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "fnd-character-flush-001.java", "text/x-java-source", new byte[0]);
+        MockMultipartFile file = new MockMultipartFile("file", "A.java", "text/x-java-source", new byte[0]);
 
         mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
                 .file(file)
@@ -203,7 +359,7 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
     @Test
     void multipartUploadRejectsOversizedFile() throws Exception {
         String source = "public class Main {" + " ".repeat(20 * 1024) + "}";
-        MockMultipartFile file = new MockMultipartFile("file", "fnd-character-flush-001.java", "text/x-java-source", source.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        MockMultipartFile file = new MockMultipartFile("file", "Main.java", "text/x-java-source", source.getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
         mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
                 .file(file)
@@ -214,7 +370,7 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
 
     @Test
     void multipartUploadRejectsInvalidUtf8() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "fnd-character-flush-001.java", "text/x-java-source", new byte[] {(byte) 0xc3, 0x28});
+        MockMultipartFile file = new MockMultipartFile("file", "A.java", "text/x-java-source", new byte[] {(byte) 0xc3, 0x28});
 
         mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
                 .file(file)
@@ -224,21 +380,21 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     @Test
-    void multipartUploadRejectsMissingPublicMain() throws Exception {
-        MockMultipartFile file = new MockMultipartFile("file", "fnd-character-flush-001.java", "text/x-java-source", "class Main {}".getBytes(java.nio.charset.StandardCharsets.UTF_8));
+    void multipartUploadRejectsMissingPublicClass() throws Exception {
+        MockMultipartFile file = new MockMultipartFile("file", "Main.java", "text/x-java-source", "class Main {}".getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
         mockMvc.perform(multipart("/api/v1/exercises/fnd-character-flush-001/submissions")
                 .file(file)
                 .header(ParticipantService.HEADER, PARTICIPANT))
             .andExpect(status().isBadRequest())
-            .andExpect(jsonPath("$.message").value("Mã nguồn phải chứa public class Main."));
+            .andExpect(jsonPath("$.message").value("Không tìm thấy top-level public class."));
     }
 
     @Test
     void resubmissionCreatesNewSubmissionAndKeepsOldSource() throws Exception {
-        SubmissionResponse first = submit("fnd-character-flush-001", characterSolution());
-        SubmissionResponse second = submit("fnd-character-flush-001", """
-            public class Main {
+        SubmissionResponse first = submit("fnd-character-flush-001", "CharacterFlush.java", characterSolution("CharacterFlush"));
+        SubmissionResponse second = submit("fnd-character-flush-001", "WrongAnswer.java", """
+            public class WrongAnswer {
                 public static void main(String[] args) {
                     System.out.println("SAI");
                 }
@@ -254,8 +410,26 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
             .andExpect(jsonPath("$.sourceCode").value(org.hamcrest.Matchers.containsString("BufferedReader")));
     }
 
+    @Test
+    void resubmissionWithChangedClassAndFilenameCreatesNewSubmission() throws Exception {
+        SubmissionResponse first = submit("fnd-character-flush-001", "CharacterFlush.java", characterSolution("CharacterFlush"));
+        SubmissionResponse second = submit("fnd-character-flush-001", "RenamedFlush.java", characterSolution("RenamedFlush"));
+
+        assertThat(first.id()).isNotEqualTo(second.id());
+        assertThat(second.verdict()).isEqualTo("AC");
+        assertThat(second.originalFileName()).isEqualTo("RenamedFlush.java");
+        assertThat(second.entryClassName()).isEqualTo("RenamedFlush");
+    }
+
     private SubmissionResponse submit(String exerciseId, String sourceCode) throws Exception {
-        String body = objectMapper.writeValueAsString(Map.of("language", "JAVA", "sourceCode", sourceCode));
+        return submit(exerciseId, "Main.java", sourceCode);
+    }
+
+    private SubmissionResponse submit(String exerciseId, String originalFileName, String sourceCode) throws Exception {
+        Map<String, String> payload = originalFileName == null
+            ? Map.of("language", "JAVA", "sourceCode", sourceCode)
+            : Map.of("language", "JAVA", "originalFileName", originalFileName, "sourceCode", sourceCode);
+        String body = objectMapper.writeValueAsString(payload);
         String response = mockMvc.perform(post("/api/v1/exercises/" + exerciseId + "/code-submissions")
                 .header(ParticipantService.HEADER, PARTICIPANT)
                 .contentType("application/json")
@@ -268,12 +442,16 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
     }
 
     private String characterSolution() {
+        return characterSolution("Main");
+    }
+
+    private String characterSolution(String className) {
         return """
             import java.io.*;
             import java.nio.charset.StandardCharsets;
             import java.util.Locale;
 
-            public class Main {
+            public class %s {
                 public static void main(String[] args) throws Exception {
                     BufferedReader in = new BufferedReader(new InputStreamReader(System.in, StandardCharsets.UTF_8));
                     BufferedWriter out = new BufferedWriter(new OutputStreamWriter(System.out, StandardCharsets.UTF_8));
@@ -287,7 +465,7 @@ class JavaCodeRunnerIntegrationTest extends AbstractPostgresIntegrationTest {
                     out.flush();
                 }
             }
-            """;
+            """.formatted(className);
     }
 
     private String dataOrderSolution() {

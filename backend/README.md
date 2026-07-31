@@ -58,10 +58,10 @@ Java code submission endpoints:
 ```text
 POST /api/v1/exercises/{exerciseId}/submissions
 Content-Type: multipart/form-data
-file=<exercise-id>.java
+file=CharacterFlush.java
 ```
 
-The multipart endpoint is the browser workflow for `JAVA_CODE` exercises. Backend validation requires one UTF-8 `.java` file, exact filename `<exercise-id>.java`, maximum 20 KB, and source containing `public class Main`. The runner still writes source to `Main.java` inside the isolated workspace before compiling.
+The multipart endpoint is the browser workflow for `JAVA_CODE` exercises. Backend validation requires one UTF-8 `.java` file, maximum 20 KB, no package declaration, exactly one top-level public class, and a `public static void main(String[] args)` entrypoint. The filename must match that public class. The runner writes the validated filename inside the isolated workspace, compiles it with `javac -encoding UTF-8 <filename>`, then runs `java <entryClassName>`.
 
 The older JSON endpoint remains for compatibility and for inline resubmission from the submitted source viewer:
 
@@ -69,7 +69,7 @@ The older JSON endpoint remains for compatibility and for inline resubmission fr
 POST /api/v1/exercises/{exerciseId}/code-submissions
 ```
 
-Each submission creates a new row. Submission detail responses include original filename, source SHA-256 and submitted source text for the owning anonymous participant.
+Each submission creates a new row. Submission detail responses include original filename, entry class name, source SHA-256 and submitted source text for the owning anonymous participant.
 
 SOAP challenge WSDL:
 

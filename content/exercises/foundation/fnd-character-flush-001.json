@@ -26,16 +26,15 @@
   "prerequisites": ["Java cơ bản", "BufferedReader", "BufferedWriter", "UTF-8 text"],
   "server_contract": {
     "mode": "JAVA_CODE",
-    "entrypoint": "public class Main",
+    "entrypoint": "Tên file Java trùng với top-level public class",
     "input": "stdin UTF-8",
     "output": "stdout UTF-8 one line"
   },
   "request_format": "Một dòng UTF-8 trên stdin. Có thể không có ký tự newline cuối file.",
   "response_format": "Không có server response.",
   "processing_requirement": "trim, gom khoảng trắng bằng một dấu cách, chuyển sang chữ hoa và in một dòng.",
-  "submission_format": "Upload đúng một file fnd-character-flush-001.java. Mã nguồn bên trong phải chứa public class Main.",
-  "requiredFileName": "fnd-character-flush-001.java",
-  "submissionInstructions": "Upload đúng một file Java UTF-8, tối đa 20 KB. Backend sẽ compile source dưới tên Main.java trong runner cô lập.",
+  "submission_format": "Upload đúng một file .java. Tên file Java phải trùng với tên top-level public class, không khai báo package, và class đó phải có public static void main(String[] args).",
+  "submissionInstructions": "Upload đúng một file Java UTF-8, tối đa 20 KB. Backend sẽ compile và chạy theo tên file/public class đã validate.",
   "timeout": { "compile_ms": 10000, "run_ms": 3000 },
   "constraints": [
     "Không đọc quá một dòng đầu tiên.",
@@ -77,7 +76,7 @@
   ],
   "starter_code": {
     "language": "JAVA",
-    "source": "import java.io.*;\n\npublic class Main {\n    public static void main(String[] args) throws Exception {\n        BufferedReader in = new BufferedReader(new InputStreamReader(System.in, java.nio.charset.StandardCharsets.UTF_8));\n        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(System.out, java.nio.charset.StandardCharsets.UTF_8));\n        String line = in.readLine();\n        // Xử lý line và ghi kết quả tại đây.\n        out.flush();\n    }\n}\n"
+    "source": "import java.io.*;\n\npublic class CharacterFlush {\n    public static void main(String[] args) throws Exception {\n        BufferedReader in = new BufferedReader(new InputStreamReader(System.in, java.nio.charset.StandardCharsets.UTF_8));\n        BufferedWriter out = new BufferedWriter(new OutputStreamWriter(System.out, java.nio.charset.StandardCharsets.UTF_8));\n        String line = in.readLine();\n        // Xử lý line và ghi kết quả tại đây.\n        out.flush();\n    }\n}\n"
   },
   "evaluation_mode": "JAVA_CODE",
   "grader_key": "java.fnd.character_flush.v1",

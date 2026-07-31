@@ -10,7 +10,7 @@ COPY web ./web
 RUN npm run frontend:build
 
 FROM ${NGINX_IMAGE} AS runtime
-ARG VERSION=0.5.0
+ARG VERSION=0.6.0
 ARG REVISION=unknown
 ARG CREATED=unknown
 ARG SOURCE=unknown

@@ -152,9 +152,8 @@ async function validateExercise(file, data, seenIds) {
     if (!data.judge || data.judge.runner_required !== true) {
       errors.push(`${rel}: JAVA_CODE exercises must require runner config`);
     }
-    const expectedFileName = `${data.id}.java`;
-    if ('requiredFileName' in data && data.requiredFileName !== expectedFileName) {
-      errors.push(`${rel}: requiredFileName must be ${expectedFileName}`);
+    if ('requiredFileName' in data) {
+      errors.push(`${rel}: requiredFileName is obsolete; Java filenames must match the public class`);
     }
     if ('submissionInstructions' in data && typeof data.submissionInstructions !== 'string') {
       errors.push(`${rel}: submissionInstructions must be a string`);

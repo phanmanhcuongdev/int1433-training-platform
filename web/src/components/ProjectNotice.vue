@@ -9,7 +9,7 @@ defineProps({
 
 <template>
   <section class="notice">
-    <p class="eyebrow">Version 0.5.2 · File-based Java submissions</p>
+    <p class="eyebrow">Version 0.6.0 · Natural Java filename submissions</p>
     <h1>Nền tảng luyện tập INT1433</h1>
     <p>
       Dự án luyện tập không chính thức cho môn INT1433. Đây không phải hệ thống PTIT,

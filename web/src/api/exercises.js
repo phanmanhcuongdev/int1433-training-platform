@@ -16,10 +16,10 @@ export function fetchExerciseEvaluation(id, options = {}) {
   return getJson(`/api/v1/exercises/${encodeURIComponent(id)}/evaluation`, options);
 }
 
-export function submitJavaCode(id, participantId, sourceCode, options = {}) {
+export function submitJavaCode(id, participantId, sourceCode, originalFileName, options = {}) {
   return postJson(
     `/api/v1/exercises/${encodeURIComponent(id)}/code-submissions`,
-    { language: 'JAVA', sourceCode },
+    { language: 'JAVA', originalFileName, sourceCode },
     { ...options, headers: { 'X-Participant-Id': participantId } }
   );
 }

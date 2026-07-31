@@ -30,6 +30,7 @@ import vn.edu.ptit.int1433.training.exception.SubmissionNotFoundException;
 import vn.edu.ptit.int1433.training.repository.ExerciseRepository;
 import vn.edu.ptit.int1433.training.repository.SubmissionRepository;
 import vn.edu.ptit.int1433.training.runner.JavaCodeRunner;
+import vn.edu.ptit.int1433.training.runner.JavaSourceSubmission;
 import vn.edu.ptit.int1433.training.runner.RunnerResult;
 
 @Service
@@ -40,30 +41,24 @@ public class SubmissionService {
     private final ExerciseRepository exerciseRepository;
     private final SubmissionRepository submissionRepository;
     private final JavaCodeRunner runner;
+    private final JavaSubmissionValidator javaSubmissionValidator;
 
-    public SubmissionService(ExerciseRepository exerciseRepository, SubmissionRepository submissionRepository, JavaCodeRunner runner) {
+    public SubmissionService(ExerciseRepository exerciseRepository, SubmissionRepository submissionRepository, JavaCodeRunner runner, JavaSubmissionValidator javaSubmissionValidator) {
         this.exerciseRepository = exerciseRepository;
         this.submissionRepository = submissionRepository;
         this.runner = runner;
+        this.javaSubmissionValidator = javaSubmissionValidator;
     }
 
     @Transactional
-    public SubmissionResponse submitCode(String exerciseId, UUID participantId, String language, String sourceCode) {
-        return submitCode(exerciseId, participantId, language, sourceCode, requiredFileName(exerciseId));
+    public SubmissionResponse submitCode(String exerciseId, UUID participantId, String language, String originalFileName, String sourceCode) {
+        return submitCode(exerciseId, participantId, language, sourceCode, originalFileName, true);
     }
 
     @Transactional
     public SubmissionResponse submitCodeFile(String exerciseId, UUID participantId, MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new SubmissionValidationException("File không được rỗng.");
-        }
-        String originalFileName = sanitizeFilename(file.getOriginalFilename());
-        String requiredFileName = requiredFileName(exerciseId);
-        if (!requiredFileName.equals(originalFileName)) {
-            throw new SubmissionValidationException("Tên file phải là " + requiredFileName + ".");
-        }
-        if (!originalFileName.endsWith(".java")) {
-            throw new SubmissionValidationException("Chỉ chấp nhận một file .java.");
         }
         if (file.getSize() > MAX_SOURCE_BYTES) {
             throw new SubmissionValidationException("File vượt quá giới hạn 20 KB.");
@@ -75,10 +70,10 @@ public class SubmissionService {
             throw new SubmissionValidationException("Không đọc được file upload.");
         }
         String sourceCode = decodeUtf8(bytes);
-        return submitCode(exerciseId, participantId, "JAVA", sourceCode, originalFileName);
+        return submitCode(exerciseId, participantId, "JAVA", sourceCode, file.getOriginalFilename(), false);
     }
 
-    private SubmissionResponse submitCode(String exerciseId, UUID participantId, String language, String sourceCode, String originalFileName) {
+    private SubmissionResponse submitCode(String exerciseId, UUID participantId, String language, String sourceCode, String originalFileName, boolean allowFilenameInference) {
         Exercise exercise = exerciseRepository.findDetailById(exerciseId)
             .orElseThrow(() -> new ExerciseNotFoundException(exerciseId));
         if (!EvaluationMode.JAVA_CODE.name().equals(exercise.getEvaluationMode())) {
@@ -88,11 +83,14 @@ public class SubmissionService {
             throw new InvalidFilterException("Only JAVA submissions are supported");
         }
         validateSource(sourceCode);
-        Submission submission = Submission.createCode(participantId, exercise, language, sourceCode, originalFileName, sha256(sourceCode));
+        JavaSourceSubmission javaSource = allowFilenameInference
+            ? javaSubmissionValidator.validateOrInferFilename(originalFileName, sourceCode)
+            : javaSubmissionValidator.validate(originalFileName, sourceCode);
+        Submission submission = Submission.createCode(participantId, exercise, language, sourceCode, javaSource.originalFileName(), javaSource.entryClassName(), sha256(sourceCode));
         submissionRepository.saveAndFlush(submission);
         log.info("submission created id={} exercise={} mode=JAVA_CODE", submission.getId(), exerciseId);
 
-        RunnerResult result = runner.judge(exercise, sourceCode);
+        RunnerResult result = runner.judge(exercise, javaSource);
         List<SubmissionTestResult> tests = result.tests().stream()
             .map(test -> SubmissionTestResult.of(test.testIndex(), test.verdict(), test.executionTimeMs(), test.diagnosticCode(), test.publicMessage()))
             .toList();
@@ -127,6 +125,7 @@ public class SubmissionService {
             submission.getDiagnosticCode(),
             submission.getPublicMessage(),
             submission.getOriginalFileName(),
+            submission.getEntryClassName(),
             submission.getSourceSha256(),
             submission.getSourceCode(),
             submission.getCompileOutput(),
@@ -153,9 +152,6 @@ public class SubmissionService {
         if (sourceCode.getBytes(StandardCharsets.UTF_8).length > MAX_SOURCE_BYTES) {
             throw new SubmissionValidationException("File vượt quá giới hạn 20 KB.");
         }
-        if (!sourceCode.contains("public class Main")) {
-            throw new SubmissionValidationException("Mã nguồn phải chứa public class Main.");
-        }
     }
 
     private String decodeUtf8(byte[] bytes) {
@@ -168,19 +164,6 @@ public class SubmissionService {
         } catch (CharacterCodingException exception) {
             throw new SubmissionValidationException("File không phải UTF-8 hợp lệ.");
         }
-    }
-
-    private String sanitizeFilename(String originalFileName) {
-        if (originalFileName == null || originalFileName.isBlank()) {
-            throw new SubmissionValidationException("Tên file phải đúng định dạng <exercise-id>.java.");
-        }
-        String normalized = originalFileName.replace('\\', '/');
-        int slash = normalized.lastIndexOf('/');
-        return slash >= 0 ? normalized.substring(slash + 1) : normalized;
-    }
-
-    private String requiredFileName(String exerciseId) {
-        return exerciseId + ".java";
     }
 
     private String sha256(String value) {
